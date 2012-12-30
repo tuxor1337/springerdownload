@@ -1,55 +1,38 @@
 # -*- coding: utf-8 -*-
 
-import httplib, re, urllib2
+import httplib, re, urllib2, copy
+from BeautifulSoup import BeautifulSoup
+from math import floor
+from sys import stdout
 
 ################################################################################
 ############################### Utilities, Tools  ##############################
 ################################################################################
 
-############################## print_* to stdout  ##############################
-
-from math import floor
-from sys import stdout
+########################## Standard Output Class  ##############################
 
 class printer:
-   def __init__(self, p=stdout):
-      self.p = p
-     
-   def doing(self,s):
-      self.p.write("==> %s..." % (s))
-      self.p.flush()
-      
-   def done(self,s="done"):
-      self.p.write(s+".\n")
-      
-   def out(self,s):
-      self.p.write(s+"\n")
-      
-   def err(self,s):
-      self.p.write("Error: "+s+"\n")
-      
-   def progress(self,text):
-      return cli_progress(text,self.p)
+   def __init__(self, p=stdout): self.p = p
+   def doing(self,s): self.p.write("==> %s..." % (s)); self.p.flush()
+   def done(self,s="done"): self.p.write(s+".\n"); self.p.flush()
+   def out(self,s): self.p.write(s+"\n"); self.p.flush()
+   def err(self,s): self.p.write("Error: "+s+"\n"); self.p.flush()
+   def progress(self,text): return cli_progress(text,self.p)
 
 class cli_progress:
    def __init__(self,text,p=stdout):
-      self.txt = "==> "+text+"..."
-      self.b = 0
-      self.p = p
+      self.txt, self.b, self.p = "==> "+text+"...", 0, p
       
    def update(self,a,b,c="\r"):
-      self.b = b
-      a = a if a < b else b
-      text = self.txt % (a,b)
-      width = 70-len(text)
+      self.b = b; a = b if a > b else a
+      if b == 0: a = b = 1
+      text = self.txt % (a,b); width = 70-len(text)
       marks = floor(width * (float(a)/float(b)))
       loader = '[' + ('=' * int(marks)) + (' ' * int(width - marks)) + ']'
-      self.p.write("%s %s%s" % (text,loader,c))
-      self.p.flush()
+      self.p.write("%s %s%s" % (text,loader,c)), self.p.flush()
          
    def destroy(self):
-      if self.b != 0:
-         self.update(self.b,self.b," Done! \n")
+      if self.b != 0: self.update(self.b,self.b," Done! \n")
 
 ################################## Little Helpers ##############################
 
@@ -86,50 +69,23 @@ def repairChars(s):
                    (u'ä',u'ö',u'ü',u'Ä',u'Ö',u'Ü')):
       s = s.replace(a,b)
    return s
-    
-def uniconvHex(string):
-   out = ""
-   if type(string) != unicode:
-      try:
-         string = string.decode("utf8")
-      except UnicodeDecodeError:
-         print string
-         print type(string)
-   for s in string:
-      out += str(hex(ord(s)))[2:].upper().rjust(4,"0")
-   return out
    
 def decodeForSure(s):
-   if type(s) == unicode:
-      return s
-   try:
-      return unicode(s)
+   if type(s) == unicode: return s
+   try: return unicode(s)
    except:
       for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
-         try:
-            return s.decode(charset)
-         except (UnicodeDecodeError,UnicodeEncodeError),e:
-            pass
-      print type(s)
-      print s
+         try: return s.decode(charset)
+         except: pass
+      print "Couldn't decode s='%s',  type(s)=%s" % (s,type(s))
       return s.decode("ascii","replace")
-      
-def make_short(s,max=35):
-   if len(s) > max:
-      m = max/2
-      return s[0:m-2]+"..."+s[-m+1:]
-   return s
 
 ################################## Soup helpers ################################
 
-from BeautifulSoup import BeautifulSoup
-import copy
-
-hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
-hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
-                     lambda m: '&#%d;' % int(m.group(1), 16))]
-                     
 def getSoup(url,params=None,charset='utf8'):
+   hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
+   hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
+                        lambda m: '&#%d;' % int(m.group(1), 16))]
    try:
       html = urllib2.urlopen(url,params).read().decode(charset)
       soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
@@ -137,8 +93,8 @@ def getSoup(url,params=None,charset='utf8'):
    except (urllib2.URLError,httplib.BadStatusLine):
       print "Connection to %s failed." % url
       return None
-      #return getSoup(url,params,charset)
    return soup
 
 def cleanSoup(soup):
    return u''.join(soup.findAll(text=True))
+   

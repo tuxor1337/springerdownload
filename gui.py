@@ -1,30 +1,28 @@
 
-from util import printer, make_short
+from gi.repository import Gtk,Gdk
+
+def _makeshort(s,max=35):
+   if len(s) > max:
+      m = max/2
+      return s[0:m-2]+"..."+s[-m+1:]
+   return s
 
 ################################################################################
 ########################## Graphical User Interface  ###########################
 ################################################################################
 
-from gi.repository import Gtk,Gdk
-
 class gui_main(Gtk.Window):
    def __init__(self,fet):
       Gtk.Window.__init__(self)
-      fet.p = self
-      self.outf = None
       self.sprFet = fet
+      self.outf = None
 
       screen = Gdk.Screen.get_default()
-      self.geometry   = (screen.width()/640.0,screen.height()/480.0,\
-             int(screen.width()*0.5),int(screen.height()*0.5))
-      width  = int(300.0*max(1,self.geometry[0]))
-      height = 120
-      self.set_size_request(width,height)
+      self.set_size_request(int(300.0*max(1,screen.width()/640.0)),120)
       self.set_position(Gtk.WindowPosition.CENTER)
       self.set_title("Springer Downloader")
       
-      vbox = Gtk.VBox()
-      hbox = Gtk.HBox()
+      vbox, hbox = Gtk.VBox(), Gtk.HBox()
       self.spr_id = Gtk.Entry()
       self.spr_id.connect("key_press_event",self.button_key_cb)
       self.butt_fetch = Gtk.Button("Fetch!")
@@ -80,44 +78,23 @@ class gui_main(Gtk.Window):
       chosen.destroy()
       if success == Gtk.ResponseType.OK:
          self.outf = filename
-         self.butt_outf.set_label("Output file: "+make_short(self.outf))
-      
-   def doing(self,s):
-      self.pgs.set_text(s+"...")
-      while Gtk.events_pending():
-         Gtk.main_iteration()
-   
-   def done(self,s="done"):
-      self.pgs.set_text(self.pgs.get_text()+s+".")
-      while Gtk.events_pending():
-         Gtk.main_iteration()
-   
-   def out(self,s):
-      self.pgs.set_text(s)
-      while Gtk.events_pending():
-         Gtk.main_iteration()
-      
-   def err(self,s):
-      self.pgs.set_text("Error: "+s)
-      while Gtk.events_pending():
-         Gtk.main_iteration()
-      
+         self.butt_outf.set_label("Output file: "+_makeshort(self.outf))
+         
+   def flush(self):
+      while Gtk.events_pending(): Gtk.main_iteration()
+   def pgs_write_flush(self,s): self.pgs.set_text(s); self.flush()
+   def doing(self,s): self.pgs_write_flush(s+"...")
+   def done(self,s="done"): self.pgs_write_flush(self.pgs.get_text()+s+".")
+   def out(self,s): self.pgs_write_flush(s)
+   def err(self,s): self.pgs_write_flush("Error: "+s)
    def progress(self,s):
-      self.pgs_text=s
-      self.pgs_b = 0
-      while Gtk.events_pending():
-         Gtk.main_iteration()
-      return self
-      
+      self.pgs_text, self.pgs_b = s, 0; self.flush(); return self
+   def destroy(self): self.update(self.pgs_b,self.pgs_b," Done!")
    def update(self,a,b,c="..."):
+      if a > b: a = b
+      if b == 0: a = b = 1
       self.pgs_b = b
       self.pgs.set_text((self.pgs_text % (a,b))+c)
       self.pgs.set_fraction(float(a)/float(b))
-      while Gtk.events_pending():
-         Gtk.main_iteration()
+      self.flush()
       
-   def destroy(self):
-      if self.pgs_b != 0:
-         self.update(self.pgs_b,self.pgs_b," Done!")
-      while Gtk.events_pending():
-         Gtk.main_iteration()

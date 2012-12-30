@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 
 import sys, os, re, urllib2, httplib
-from time import localtime, strftime
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from pyPdf import PdfFileWriter, PdfFileReader
 
-from pdfToc import *
-from util import *
-from gui import gui_main
-
 SPRINGER_URL = "http://link.springer.com"
+GS_BIN       = "/usr/bin/gs"
+
+from util import *
+from pdfToc import *
+from pdfmark import *
 
 ################################################################################
 ################################## Fetcher #####################################
@@ -104,7 +104,8 @@ class springerFetcher(object):
          tmp_img    = NamedTemporaryFile(delete=False,suffix=".tif")
          tmp_pdfimg = NamedTemporaryFile(delete=False,suffix=".pdf")
          tmp_img.write(webImg.read()); tmp_img.close()
-         p = Popen(["/usr/bin/convert",tmp_img.name,tmp_pdfimg.name],stdout=PIPE,stderr=PIPE)
+         p = Popen(["/usr/bin/convert",tmp_img.name,tmp_pdfimg.name],\
+                   stdout=PIPE,stderr=PIPE)
          p.communicate(); os.remove(tmp_img.name)
          tmp_cover = PdfFileReader(tmp_pdfimg)
          self.outputPDF.addPage(tmp_cover.pages[0])
@@ -123,7 +124,8 @@ class springerFetcher(object):
          if len(toc2) != 0 and len(toc1) != 0:
             mergeitem = toc2.pop(0)
             if toc1[-1]['title'] == mergeitem['title']:
-               toc1[-1]['children'] = tocMerge(toc1[-1]['children'],mergeitem['children'])
+               toc1[-1]['children'] = tocMerge(toc1[-1]['children'],
+                                                   mergeitem['children'])
             elif mergeitem['page_range'][1] != 0 and \
                (toc1[-1]['page_range'][0] > mergeitem['page_range'][1] \
                or toc1[-1]['page_range'][0] == 0):
@@ -133,7 +135,6 @@ class springerFetcher(object):
             else:
                toc1.append(mergeitem)
          return toc1+toc2
-      
       
       tmp_dpc = self.soup.find("span", {"class" : "number-of-pages" })
       dl_page_cnt = int(tmp_dpc.string) if tmp_dpc != None else 1
@@ -169,79 +170,81 @@ class springerFetcher(object):
             if len(fr_matt) != 0:
                fr_matt = fr_matt[0].extract()
                pdf_url = fr_matt("a")[0]["href"]
-               page_range = cleanSoup(fr_matt.find("p", {"class" : "page-range" }))
+               page_range = cleanSoup(fr_matt.find("p",\
+                                             {"class" : "page-range" }))
             append_ch(chl, cleanSoup(subh3).strip(), \
                   getTocRec(subol), pdf_url, [],page_range)
                   
       def parseChItem(chl,li):
-         try:
-            title = cleanSoup(li.h3)
+         try: title = cleanSoup(li.h3)
          except:
             title = cleanSoup(li("p", recursive=False, \
                attrs={"class":re.compile(r'\btitle\b')})[0]).strip()
          try: 
             link = li.find("span",{"class":"action"}).a
             pdf_url = link["href"] if "Download PDF" in cleanSoup(link) else ""
-         except:
-            pdf_url = ""
-         append_ch(chl, title, \
-            [], pdf_url,  [cleanSoup(x.a).strip()\
-            for x in li("li", {"itemprop" : "author"})],\
-            cleanSoup(li.find("p", {"class" : "page-range" })),"no-access" in li['class'])
+         except: pdf_url = ""
+         append_ch(chl, title, [], pdf_url, \
+            [cleanSoup(x.a).strip() \
+                  for x in li("li", {"itemprop" : "author"})], \
+            cleanSoup(li.find("p", {"class" : "page-range" })), \
+            "no-access" in li['class'])
          
       def getTocRec(ol):
          chl = []
          for li in ol("li",recursive=False):
-            if "part-item" in li['class']:
-               parsePartItem(chl,li)
-            else:
-               parseChItem(chl,li)
+            if "part-item" in li['class']: parsePartItem(chl,li)
+            else: parseChItem(chl,li)
          return chl
-      
-      toc = getTocRec(div.ol)
-      return toc
+      return getTocRec(div.ol)
             
-############################### PDF Files ######################################
+############################ Fetch PDF Files ###################################
 
    def fetchPdfData(self,pgs=None):
-      self.tmp_j=0
-      def fetchCh(t,lvl=0):
+      self.tmp_pgs_j = 0
+      
+      def getAccessibleChildren(t):
+         new_t = []
+         for i in range(len(t)):
+            if not t[i]['noaccess']:
+               t[i]['children'] = getAccessibleChildren(t[i]['children'])
+               if t[i]['pdf_url'] != "" or len(t[i]['children']) != 0:
+                  new_t.append(t[i])
+         return new_t
+      accessible_toc = getAccessibleChildren(self.toc)
+      
+      def iterateRec(t,func,lvl=0):
          for el in t:
-            if el['pdf_url'] != "":
-               pdf = TemporaryFile()
-               webPDF  = urllib2.urlopen(SPRINGER_URL + el['pdf_url'])
-               pdf.write(webPDF.read())
-               inputPDF = PdfFileReader(pdf)
-               [self.outputPDF.addPage(x) for x in inputPDF.pages]
-               self.extracted_toc += getTocFromPdf(inputPDF,self.total_pages,\
-                                 el['title'],lvl,len(el['children']))
-               pr = el['page_range'][0] if el['page_range'][0] != 0 else -999
-               self.labels += getPagelabelsFromPdf(inputPDF,\
-                                 self.total_pages,pr)
-               el['page_cnt'] = inputPDF.getNumPages()
-               self.total_pages += el['page_cnt']
-               self.tmp_j += 1
-               if pgs != None:
-                  pgs.update(self.tmp_j,self.info['chapter_cnt'])
-            elif not el['noaccess']:
-               self.extracted_toc.append([el['title'],1+self.total_pages,\
-                                 lvl,len(el['children'])])
+            el = func(el,lvl)
             if len(el['children']) != 0:
-               fetchCh(el['children'],lvl+1)
-      fetchCh(self.toc)
+               iterateRec(el['children'],func,lvl+1)
+      def fetchCh(el,lvl):
+         if el['pdf_url'] != "":
+            pdf = TemporaryFile()
+            webPDF  = urllib2.urlopen(SPRINGER_URL + el['pdf_url'])
+            pdf.write(webPDF.read())
+            inputPDF = PdfFileReader(pdf)
+            [self.outputPDF.addPage(x) for x in inputPDF.pages]
+            self.extracted_toc += getTocFromPdf(inputPDF,self.total_pages,\
+                              el['title'],lvl,len(el['children']))
+            pr = el['page_range'][0] if el['page_range'][0] != 0 else -999
+            self.labels += getPagelabelsFromPdf(inputPDF,\
+                              self.total_pages,pr)
+            el['page_cnt'] = inputPDF.getNumPages()
+            self.total_pages += el['page_cnt']
+            self.tmp_pgs_j += 1
+            if pgs != None:
+               pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
+         else:
+            self.extracted_toc.append([el['title'],1+self.total_pages,\
+                              lvl,len(el['children'])])
+         return el
+      iterateRec(accessible_toc,fetchCh)
       
 ############################ Output to file ####################################
 
    def createPdfmark(self):
-      self.pdfmarks = "[ /Title <FEFF%s>" % (uniconvHex(self.info['title']))
-      self.pdfmarks += " /Author <FEFF%s>" % (uniconvHex(", ".join(self.info['authors'])))
-      if self.info['subtitle'] != None:
-         self.pdfmarks += " /Subject <FEFF%s>" % (uniconvHex(self.info['subtitle']))
-      self.pdfmarks += " /ModDate (D:%s)" % (strftime("%Y%m%d%H%M%S",localtime()))
-      self.pdfmarks += " /CreationDate (D:%s)" % (self.info['year'])
-      self.pdfmarks += " /Creator (springer_download.py)"
-      self.pdfmarks += " /Producer (springer_download.py)"
-      self.pdfmarks += " /DOCINFO pdfmark\n"
+      self.pdfmarks = infoToPdfmark(self.info)
       self.pdfmarks += tocToPdfmark(self.extracted_toc,repairChars)
       self.pdfmarks += labelsToPdfmark(self.labels)
       
@@ -253,7 +256,7 @@ class springerFetcher(object):
       pdfmark_file.write(self.pdfmarks)
       self.p.done()
       pdfmark_file.flush(); pdfmark_file.seek(0)
-      cmd = ["/usr/bin/gs","-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
+      cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
                "-dAutoRotatePages=/None","-sOutputFile="+self.outf,\
                "-",pdfmark_file.name]
       p = Popen(cmd,stdin=pdf,stdout=PIPE,stderr=PIPE)
@@ -272,19 +275,27 @@ class springerFetcher(object):
 ################################################################################
 
 if __name__ == "__main__":
-   if len(sys.argv) > 1:
-      import argparse
-      parser = argparse.ArgumentParser(description='Fetch whole books from link.springer.com.')
-      parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER', type=str,
-                        help='A string identifying the book, e.g. its URL or Online-ISBN.')
+   if "--gui" in  sys.argv[1:] or not os.isatty(0):
+      from gui import gui_main
+      gui_main(springerFetcher)
+   else:
+      from argparse import ArgumentParser
+      
+      parser = ArgumentParser(description = 'Fetch whole books '
+                                          + 'from link.springer.com.')
+      parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
+                        type=str, help = 'A string identifying the book, '
+                                       + 'e.g. its URL or Online-ISBN.')
       parser.add_argument('-o','--output', metavar='FILE', type=str, 
-                        help='Place to store, default: "SPRINGER_NAME.pdf".')
+                        help='Place to store, default: "ONLINE_ISBN.pdf".')
       parser.add_argument('--no-cover', action="store_true", default=False,
                         help="Don't add front cover as first page.")
+      parser.add_argument('--gui', action="store_true", default=False,
+                        help= "Start the interactive GUI not interpreting "
+                            + "the rest of the command line.")
       args = parser.parse_args()
       fet = springerFetcher(args.springername,args.output,\
                   printer(),not args.no_cover)
       fet.run()
-   else:
-      gui_main(springerFetcher)
+      
    

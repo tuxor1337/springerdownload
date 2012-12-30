@@ -1,13 +1,12 @@
 
-from util import uniconvHex, decodeForSure
+from util import decodeForSure
+import pyPdf
    
 ################################################################################
 ########################## PDF toc and labels  #################################
 ################################################################################
 
-import pyPdf
-
-def getDestinationPageNumbers(pdf):
+def _getDestinationPageNumbers(pdf):
    def _setup_outline_page_ids(outline, _result=None,lvl=0):
        if _result is None:
            _result = {}
@@ -42,7 +41,7 @@ def getDestinationPageNumbers(pdf):
    return result
    
 def getTocFromPdf(pdf,shift=0,default=None,baselvl=0,child_cnt=0):
-   ch = getDestinationPageNumbers(pdf)
+   ch = _getDestinationPageNumbers(pdf)
    ch.sort(key=lambda x: x[1:3])
    ch = [[decodeForSure(x[0]),x[1]+shift,x[2]+baselvl] for x in ch]
    for i in range(len(ch)):
@@ -54,16 +53,6 @@ def getTocFromPdf(pdf,shift=0,default=None,baselvl=0,child_cnt=0):
    if len(ch) == 0 and default != None:
       ch.append([default,1+shift,baselvl,child_cnt])
    return ch
-
-def tocToPdfmark(toc,filt=lambda x:x):
-   marks = ""
-   for a,b,c,d in toc:
-      marks += "["
-      if d > 0:
-         marks += "/Count -%d " % (d)
-      marks += "/Title <FEFF%s> /View [/XYZ null null null] /Page %d  /OUT pdfmark\n" \
-                           % (uniconvHex(filt(a.strip())),b)
-   return marks
    
 def getPagelabelsFromPdf(pdf,shift=0,start=None):
    if start == None:
@@ -81,28 +70,6 @@ def getPagelabelsFromPdf(pdf,shift=0,start=None):
       else:
          pls.append([shift,{"/S":"/D","/St":str(start)}])
    return pls
-   
-def labelsToPdfmark(pls):
-   if len(pls) == 0:
-      return ""
-   mark = "[/_objdef {pl} /type /dict /OBJ pdfmark\n"
-   mark += "[{pl} <</Nums ["
-   tmp = []
-   s = ""
-   for label in pls:
-      s = "%d <<" % (label[0])
-      tmp2 = []
-      for (i,j) in label[1].items():
-         if type(j) == pyPdf.generic.TextStringObject:
-            j = "(%s)" % (j)
-         tmp2.append("%s %s" % (i,j))
-      s += " ".join(tmp2)
-      s += ">>"
-      tmp.append(s)
-   mark += " ".join(tmp)
-   mark += "]>> /PUT pdfmark\n"
-   mark += "[{Catalog} <</PageLabels {pl}>> /PUT pdfmark"
-   return mark
 
 if __name__ == "__main__":
    import argparse
@@ -110,13 +77,14 @@ if __name__ == "__main__":
    parser = argparse.ArgumentParser(description='Extract table of contents from pdf document')
    parser.add_argument('pdffile', metavar='FILE', type=str, 
                      help='Path to pdf file.')
-   parser.add_argument('--pdfmarks', action="store_true", default=False,
+   parser.add_argument('--pdfmark', action="store_true", default=False,
                      help='Output TOC as pdfmarks')
    args = parser.parse_args()
    
    pdf = pyPdf.PdfFileReader(open(args.pdffile,"r"))
    toc = getTocFromPdf(pdf)
-   if args.pdfmarks == True:
+   if args.pdfmark == True:
+      from pdfmark import *
       print tocToPdfmark(toc)
       print labelsToPdfmark(getPagelabelsFromPdf(pdf))
    else:
