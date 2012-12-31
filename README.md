@@ -31,18 +31,23 @@ Simply install running:
 
     # python setup.py install
     
-If you want to install as a user to your $HOME directory use the "--user"
+If you want to install as a user to your `$HOME` directory use the `--user`
 option. Please note that you will have to remove the data manually if you want
 to uninstall. Here are the files and folders created by the setup script:
 
-    /usr/bin/springer_download
-    /usr/share/applications/springer_download.desktop
-    /usr/share/pixmaps/springer_download.png
-    /usr/lib/python2.7/site-packages/springerdl/
-    /usr/share/doc/springerdl/examples/
+    %{platform-prefix}bin/springer_download
+    %{platform-prefix}/share/applications/springer_download.desktop
+    %{platform-prefix}/share/pixmaps/springer_download.png
+    %{platform-prefix}/share/doc/springerdl/examples/
+    %{python-site-packages}/springerdl/
+    %{python-site-packages}/Springer_Link_Downloader-1.0-py2.7.egg-info
     
-Package maintainers might want to add the "--root" option to specify an
-appropriate BUILDROOT. For more information see 
+`%{python-site-packages}` and `%{platform-prefix}` depend on the operating system.
+In Fedora these values default to `/usr/lib/python2.7/site-packages` and `/usr`
+respectively.
+    
+Package maintainers might want to add the `--root` option to specify an
+appropriate `%{buildroot}`. For more information see 
 
     $ python setup.py install --help
 
