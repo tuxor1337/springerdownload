@@ -6,7 +6,7 @@ ImageMagick and Ghostscript. For more information see
 http://tovotu.de/dev/518-Neuer-SpringerLink-Downloader/
 
 Requirements
-============
+------------
 
 Springer Link Downloader depends on the following Python packages:
 
@@ -24,8 +24,7 @@ Furthermore it makes use of these command line tools:
 * ghostscript (as `/usr/bin/gs`)
 
 Installation
-============
-
+------------
 
 Simply install running:
 
@@ -52,7 +51,7 @@ appropriate `%{buildroot}`. For more information see
     $ python setup.py install --help
 
 License
-=======
+-------
 
 This program is free software; you can redistribute it and/or modify it under
 the terms of VERSION 2 of the GNU General Public License as published by the
