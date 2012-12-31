@@ -10,7 +10,9 @@ from pdftoc import *
 from pdfmark import *
 
 SPRINGER_URL = "http://link.springer.com"
+SPR_IMG_URL  = "http://images.springer.com"
 GS_BIN       = "/usr/bin/gs"
+IM_BIN       = "/usr/bin/convert"
 
 ################################################################################
 ################################## Fetcher #####################################
@@ -99,12 +101,12 @@ class springerFetcher(object):
 
    def fetchCover(self):
       try:
-         webImg = urllib2.urlopen("http://images.springer.com/covers/%s.tif" \
-                           % (self.info['print_isbn']))
+         webImg = urllib2.urlopen("%s/covers/%s.tif" \
+                           % (SPR_IMG_URL,self.info['print_isbn']))
          tmp_img    = NamedTemporaryFile(delete=False,suffix=".tif")
          tmp_pdfimg = NamedTemporaryFile(delete=False,suffix=".pdf")
          tmp_img.write(webImg.read()); tmp_img.close()
-         p = Popen(["/usr/bin/convert",tmp_img.name,tmp_pdfimg.name],\
+         p = Popen([IM_BIN,tmp_img.name,tmp_pdfimg.name],\
                    stdout=PIPE,stderr=PIPE)
          p.communicate(); os.remove(tmp_img.name)
          tmp_cover = PdfFileReader(tmp_pdfimg)
