@@ -12,8 +12,11 @@ Springer Link Downloader depends on the following Python packages:
 
 * urllib2, httplib
 * pyPdf
-* gobject (Gtk3)
 * BeautifulSoup
+
+It's totally possible running Springer Link Downloader in the command
+line. But if you prefer a graphical user interface, run it with --gui
+option. You will need Gtk3 from the Python API of gobject to run the GUI.
 
 Furthermore it makes use of these command line tools:
 
@@ -23,26 +26,35 @@ Furthermore it makes use of these command line tools:
 Installation
 ============
 
-There are no setup scripts yet. But the intended directory structure looks
-something like this.
 
-  /usr/bin/springer_download.py
-  /usr/lib/python2.7/site-packages/springerdl/
-  /usr/lib/python2.7/site-packages/springerdl/{__init__,fetcher,gui,pdfmark,pdftoc,util}.py
-  /usr/share/doc/springerdl/examples/
-  /usr/share/doc/springerdl/examples/toc_{from_pdf,gui_gtk}.py
+Simply install running:
+
+    # python setup.py install
+    
+If you want to install as a user to your $HOME directory use the "--user"
+option. Please note that you will have to remove the data manually if you want
+to uninstall. Here are the files and folders created by the setup script:
+
+    /usr/bin/springer_download
+    /usr/share/applications/springer_download.desktop
+    /usr/share/pixmaps/springer_download.png
+    /usr/lib/python2.7/site-packages/springerdl/
+    /usr/share/doc/springerdl/examples/
+    
+Package maintainers might want to add the "--root" option to specify an
+appropriate BUILDROOT. For more information see 
+
+    $ python setup.py install --help
 
 License
 =======
 
-This program is free software; you can redistribute it and/or
-modify it under the terms of VERSION 2 of the GNU General Public
-License as published by the Free Software Foundation provided
-that the above copyright notice is included.
+This program is free software; you can redistribute it and/or modify it under
+the terms of VERSION 2 of the GNU General Public License as published by the
+Free Software Foundation provided that the above copyright notice is included.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
 
-Go to http://www.gnu.org/licenses/gpl-2.0.html to get a copy
-of the license.
+Go to http://www.gnu.org/licenses/gpl-2.0.html to get a copy of the license.

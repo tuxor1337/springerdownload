@@ -1,0 +1,11 @@
+[Desktop Entry]
+Name=Springer Link Downloader
+GenericName=Download tool for link.springer.com written in Python
+Comment=Download books from link.springer.com
+Exec=springer_download
+Terminal=false
+Type=Application
+StartupNotify=true
+Icon=springer_download
+Categories=Utility;
+X-GNOME-FullName=Springer Link Downloader
