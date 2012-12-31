@@ -26,7 +26,7 @@ Installation
 There are no setup scripts yet. But the intended directory structure looks
 something like this.
 
-    /usr/bin/springer_download.py
+    /usr/bin/springer_download
     /usr/lib/python2.7/site-packages/springerdl/
     /usr/lib/python2.7/site-packages/springerdl/{__init__,fetcher,gui,pdfmark,pdftoc,util}.py
     /usr/share/doc/springerdl/examples/
