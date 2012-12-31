@@ -12,8 +12,11 @@ Springer Link Downloader depends on the following Python packages:
 
 * urllib2, httplib
 * pyPdf
-* gobject (Gtk3)
 * BeautifulSoup
+
+It's totally possible running Springer Link Downloader in the command
+line. But if you prefer a graphical user interface, run it with --gui
+option. You will need Gtk3 from the Python API of gobject to run the GUI.
 
 Furthermore it makes use of these command line tools:
 
