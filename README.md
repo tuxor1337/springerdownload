@@ -2,7 +2,7 @@ Springer Link Downloader
 ========================
 
 Downloader for link.springer.com written in Python using pyPdf, BeautifulSoup,
-urllib2, ImageMagick and Ghostscript. For more information see 
+ImageMagick and Ghostscript. For more information see 
 http://tovotu.de/dev/518-Neuer-SpringerLink-Downloader/
 
 Requirements
@@ -10,18 +10,18 @@ Requirements
 
 Springer Link Downloader depends on the following Python packages:
 
-* urllib2, httplib
+* urllib2, httplib (should be included by default with most distributions)
 * pyPdf
 * BeautifulSoup
 
 It's totally possible running Springer Link Downloader in the command
-line. But if you prefer a graphical user interface, run it with --gui
-option. You will need Gtk3 from the Python API of gobject to run the GUI.
+line. But if you prefer a graphical user interface, run it with `--gui`
+option. You will need `Gtk3` from the Python API of `gobject` to run the GUI.
 
 Furthermore it makes use of these command line tools:
 
-* ImageMagick (as /usr/bin/convert)
-* ghostscript (as /usr/bin/gs)
+* ImageMagick (as `/usr/bin/convert`)
+* ghostscript (as `/usr/bin/gs`)
 
 Installation
 ============
@@ -35,7 +35,7 @@ If you want to install as a user to your `$HOME` directory use the `--user`
 option. Please note that you will have to remove the data manually if you want
 to uninstall. Here are the files and folders created by the setup script:
 
-    %{platform-prefix}bin/springer_download
+    %{platform-prefix}/bin/springer_download
     %{platform-prefix}/share/applications/springer_download.desktop
     %{platform-prefix}/share/pixmaps/springer_download.png
     %{platform-prefix}/share/doc/springerdl/examples/
