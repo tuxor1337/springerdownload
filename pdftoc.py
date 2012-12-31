@@ -70,25 +70,4 @@ def getPagelabelsFromPdf(pdf,shift=0,start=None):
       else:
          pls.append([shift,{"/S":"/D","/St":str(start)}])
    return pls
-
-if __name__ == "__main__":
-   import argparse
-
-   parser = argparse.ArgumentParser(description='Extract table of contents from pdf document')
-   parser.add_argument('pdffile', metavar='FILE', type=str, 
-                     help='Path to pdf file.')
-   parser.add_argument('--pdfmark', action="store_true", default=False,
-                     help='Output TOC as pdfmarks')
-   args = parser.parse_args()
-   
-   pdf = pyPdf.PdfFileReader(open(args.pdffile,"r"))
-   toc = getTocFromPdf(pdf)
-   if args.pdfmark == True:
-      from pdfmark import *
-      print tocToPdfmark(toc)
-      print labelsToPdfmark(getPagelabelsFromPdf(pdf))
-   else:
-      for x in toc:
-         print x[0]
-      
          

@@ -1,15 +1,15 @@
 
 from gi.repository import Gtk,Gdk
 
+################################################################################
+########################## Graphical User Interface  ###########################
+################################################################################
+
 def _makeshort(s,max=35):
    if len(s) > max:
       m = max/2
       return s[0:m-2]+"..."+s[-m+1:]
    return s
-
-################################################################################
-########################## Graphical User Interface  ###########################
-################################################################################
 
 class gui_main(Gtk.Window):
    def __init__(self,fet):
@@ -52,7 +52,8 @@ class gui_main(Gtk.Window):
       Gtk.main()
       
    def button_key_cb(self,widget,event,data=None):
-      if event.type == Gdk.EventType.KEY_PRESS and event.keyval == Gdk.keyval_from_name("Return"):
+      if event.type == Gdk.EventType.KEY_PRESS \
+            and event.keyval == Gdk.keyval_from_name("Return"):
          self.button_cb(widget,data)
          return True
       
@@ -80,13 +81,17 @@ class gui_main(Gtk.Window):
          self.outf = filename
          self.butt_outf.set_label("Output file: "+_makeshort(self.outf))
          
+   def write(self,s): self.pgs.set_text(s)
    def flush(self):
       while Gtk.events_pending(): Gtk.main_iteration()
-   def pgs_write_flush(self,s): self.pgs.set_text(s); self.flush()
-   def doing(self,s): self.pgs_write_flush(s+"...")
-   def done(self,s="done"): self.pgs_write_flush(self.pgs.get_text()+s+".")
-   def out(self,s): self.pgs_write_flush(s)
-   def err(self,s): self.pgs_write_flush("Error: "+s)
+   def writef(self,s): self.write(s); self.flush()
+   def doing(self,s):
+      self.write(s+"..."); self.pgs.set_fraction(0.1); self.flush()
+   def done(self,s="done"):
+      self.write(self.pgs.get_text()+s+".")
+      self.pgs.set_fraction(1); self.flush()
+   def out(self,s): self.writef(s)
+   def err(self,s): self.writef("Error: "+s)
    def progress(self,s):
       self.pgs_text, self.pgs_b = s, 0; self.flush(); return self
    def destroy(self): self.update(self.pgs_b,self.pgs_b," Done!")
@@ -94,7 +99,7 @@ class gui_main(Gtk.Window):
       if a > b: a = b
       if b == 0: a = b = 1
       self.pgs_b = b
-      self.pgs.set_text((self.pgs_text % (a,b))+c)
+      self.write((self.pgs_text % (a,b))+c)
       self.pgs.set_fraction(float(a)/float(b))
       self.flush()
       

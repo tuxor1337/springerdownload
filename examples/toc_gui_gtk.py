@@ -1,7 +1,7 @@
 
 from gi.repository import Gtk,Gdk
 
-class gui_toc(Gtk.TreeView):
+class toc_tree(Gtk.TreeView):
    def __init__(self,toc):
       self.toc_store = Gtk.TreeStore(str,str)
       Gtk.TreeView.__init__(self,self.toc_store)
@@ -19,8 +19,6 @@ class gui_toc(Gtk.TreeView):
       self.cols[0].set_expand(True)
       self.cols[1].set_min_width(200)
       self.cols[1].set_max_width(300)
-      self.cols[2].set_max_width(250)
-      self.cols[3].set_max_width(100)
       self.hide()
       
       def add_toc(t,p=None):
@@ -35,11 +33,11 @@ class gui_toc(Gtk.TreeView):
                add_toc(el['children'],this)
       add_toc(self.toc)
 
-class gui_main(Gtk.Window):
+class toc_gui(Gtk.Window):
    def __init__(self,toc):
       Gtk.Window.__init__(self)
       self.toc      = toc
-      self.tocliste = gui_toc(self.toc)
+      self.tocliste = toc_tree(self.toc)
 
       screen = Gdk.Screen.get_default()
       self.geometry   = (screen.width()/640.0,screen.height()/480.0,\
@@ -52,9 +50,9 @@ class gui_main(Gtk.Window):
       
       self.scrollwin = Gtk.ScrolledWindow()
       self.scrollwin.add(self.tocliste)
-      #self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
+      self.scrollwin.set_policy(Gtk.PolicyType.AUTOMATIC,Gtk.PolicyType.AUTOMATIC)
       self.add(self.scrollwin)
       
       self.connect("destroy", Gtk.main_quit)
-      #self.show_all()
-      #Gtk.main()
+      self.show_all()
+      Gtk.main()

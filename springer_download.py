@@ -9,7 +9,7 @@ SPRINGER_URL = "http://link.springer.com"
 GS_BIN       = "/usr/bin/gs"
 
 from util import *
-from pdfToc import *
+from pdftoc import *
 from pdfmark import *
 
 ################################################################################
