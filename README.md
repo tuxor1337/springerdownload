@@ -23,6 +23,14 @@ Furthermore it makes use of these command line tools:
 * ImageMagick (as `/usr/bin/convert`)
 * ghostscript (as `/usr/bin/gs`)
 
+Quick start: create a single working executable
+----------------------------------------
+
+You can create a working executable in `dist/springer_download` by simply
+running the following command:
+
+    % python setup.py single_file
+
 Installation
 ------------
 

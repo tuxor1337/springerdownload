@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
+import sys
+
 ################################################################################
 ################################## Main program ################################
 ################################################################################
 
-if __name__ == "__main__":
-   from sys import argv
+def main(argv=sys.argv):
    from os import isatty
    from springerdl.fetcher import springerFetcher
    
@@ -30,5 +31,10 @@ if __name__ == "__main__":
       fet = springerFetcher(args.springername,args.output,\
                   printer(),not args.no_cover)
       fet.run()
+      
+   return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
       
    
