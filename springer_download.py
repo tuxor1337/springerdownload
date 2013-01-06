@@ -15,6 +15,7 @@ def main(argv=sys.argv):
       gui_main(springerFetcher)
    else:
       from argparse import ArgumentParser
+      from springerdl.util import printer
       parser = ArgumentParser(description = 'Fetch whole books '
                                           + 'from link.springer.com.')
       parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
