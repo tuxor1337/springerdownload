@@ -42,6 +42,13 @@ class single_file(bdist_dumb):
                 exefile.write(zipfile.read())
                 zipfile.close(); exefile.close()
                 os.chmod(exef,0777)
+                
+data_files = [("share/applications",["setup_data/springer_download.desktop"]),
+    ("share/doc/springerdl/examples",["examples/toc_from_pdf.py",
+                   "examples/toc_gui_gtk.py"]),
+    ("share/pixmaps",["setup_data/springer_download.png"])]
+if "single_file" in sys.argv:
+    data_files = []
 
 setup(name='Springer Link Downloader',
       version='1.0',
@@ -52,8 +59,5 @@ setup(name='Springer Link Downloader',
       url='https://github.com/tuxor1337/springerdownload',
       packages=["springerdl"],
       scripts=["springer_download.py"],
-      data_files=[("share/applications",["setup_data/springer_download.desktop"]),
-                  ("share/doc/springerdl/examples",["examples/toc_from_pdf.py",
-                                           "examples/toc_gui_gtk.py"]),
-                  ("share/pixmaps",["setup_data/springer_download.png"])]
+      data_files=data_files
      )
