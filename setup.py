@@ -59,5 +59,6 @@ setup(name='Springer Link Downloader',
       url='https://github.com/tuxor1337/springerdownload',
       packages=["springerdl"],
       scripts=["springer_download.py"],
+      install_requires=['pyPDF', 'beautifulsoup'],
       data_files=data_files
      )
