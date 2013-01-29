@@ -10,10 +10,7 @@ def main(argv=sys.argv):
    from os import isatty
    from springerdl.fetcher import springerFetcher
    
-   if "--gui" in  argv[1:] or not isatty(0):
-      from springerdl.gui import gui_main
-      gui_main(springerFetcher)
-   else:
+   if (isatty(0) or len(argv) > 1) and "--gui" not in  argv[1:]:
       from argparse import ArgumentParser
       from springerdl.util import printer
       parser = ArgumentParser(description = 'Fetch whole books '
@@ -32,6 +29,9 @@ def main(argv=sys.argv):
       fet = springerFetcher(args.springername,args.output,\
                   printer(),not args.no_cover)
       fet.run()
+   else:
+      from springerdl.gui import gui_main
+      gui_main(springerFetcher)
       
    return 0
 
