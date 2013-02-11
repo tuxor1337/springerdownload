@@ -13,8 +13,10 @@ def main(argv=sys.argv):
     if (isatty(0) or len(argv) > 1) and "--gui" not in  argv[1:]:
         from argparse import ArgumentParser
         from springerdl.util import printer
-        parser = ArgumentParser(description = 'Fetch whole books '
-                                          + 'from link.springer.com.')
+        from gettext import gettext as _
+        
+        parser = ArgumentParser(description = _('Fetch whole books from') \
+                                        + ' link.springer.com.')
         parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
                         type=str, help = 'A string identifying the book, '
                                        + 'e.g. its URL or Online-ISBN.')
@@ -23,7 +25,7 @@ def main(argv=sys.argv):
         parser.add_argument('--no-cover', action="store_true", default=False,
                         help="Don't add front cover as first page.")
         parser.add_argument('--autotitle', action="store_true", default=False,
-                        help="Save as %authors% - %title%.pdf. Overwritten by -o option.")
+                        help="Save as AUTHORS - TITLE.pdf. Overwritten by -o option.")
         parser.add_argument('--gui', action="store_true", default=False,
                         help= "Start the interactive GUI not interpreting "
                             + "the rest of the command line.")
