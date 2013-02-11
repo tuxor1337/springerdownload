@@ -4,6 +4,7 @@ import httplib, re, urllib2, copy
 from BeautifulSoup import BeautifulSoup
 from math import floor
 from sys import stdout
+from gettext import gettext as _
 
 ################################################################################
 ############################### Utilities, Tools  ##############################
@@ -77,7 +78,7 @@ def decodeForSure(s):
         for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
             try: return s.decode(charset)
             except: pass
-        print "Couldn't decode s='%s',  type(s)=%s" % (s,type(s))
+        print _("Can't decode") + " s='%s',  type(s)=%s" % (s,type(s))
         return s.decode("ascii","replace")
 
 ################################## Soup helpers ################################
@@ -91,7 +92,7 @@ def getSoup(url,params=None,charset='utf8'):
         soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
                 markupMassage=hexentityMassage)
     except (urllib2.URLError,httplib.BadStatusLine):
-        print "Connection to %s failed." % url
+        print _("Connection to %s failed.") % url
         return None
     return soup
 

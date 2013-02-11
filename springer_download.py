@@ -15,20 +15,20 @@ def main(argv=sys.argv):
         from springerdl.util import printer
         from gettext import gettext as _
         
-        parser = ArgumentParser(description = _('Fetch whole books from') \
-                                        + ' link.springer.com.')
+        parser = ArgumentParser(description = _('Fetch whole books from'
+                                            + ' link.springer.com.'))
         parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
-                        type=str, help = 'A string identifying the book, '
-                                       + 'e.g. its URL or Online-ISBN.')
+                        type=str, help = _('A string identifying the book, '
+                                       + 'e.g. its URL or Online-ISBN.'))
         parser.add_argument('-o','--output', metavar='FILE', type=str, 
-                        help='Place to store, default: "ONLINE_ISBN.pdf".')
+                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))
         parser.add_argument('--no-cover', action="store_true", default=False,
-                        help="Don't add front cover as first page.")
+                        help=_("Don't add front cover as first page."))
         parser.add_argument('--autotitle', action="store_true", default=False,
-                        help="Save as AUTHORS - TITLE.pdf. Overwritten by -o option.")
+                        help=_("Save as AUTHORS - TITLE.pdf. Overwritten by -o option."))
         parser.add_argument('--gui', action="store_true", default=False,
-                        help= "Start the interactive GUI not interpreting "
-                            + "the rest of the command line.")
+                        help=_("Start the interactive GUI not interpreting "
+                            + "the rest of the command line."))
         args = parser.parse_args()
         fet = springerFetcher(args.springername,args.output,\
                   printer(),not args.no_cover,args.autotitle)

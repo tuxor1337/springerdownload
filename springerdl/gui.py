@@ -1,5 +1,6 @@
 
 from gi.repository import Gtk,Gdk
+from gettext import gettext as _
 
 ################################################################################
 ########################## Graphical User Interface  ###########################
@@ -25,12 +26,12 @@ class gui_main(Gtk.Window):
         vbox, hbox = Gtk.VBox(), Gtk.HBox()
         self.spr_id = Gtk.Entry()
         self.spr_id.connect("key_press_event",self.button_key_cb)
-        self.butt_fetch = Gtk.Button("Fetch!")
+        self.butt_fetch = Gtk.Button(_("Fetch!"))
         self.butt_fetch.connect("key_press_event",self.button_key_cb)
         self.butt_fetch.connect("released",self.button_cb)
         self.pgs = Gtk.ProgressBar()
         self.pgs.set_show_text(True)
-        self.pgs.set_text('Type in the URL and press "Fetch!" to start.')
+        self.pgs.set_text(_('Type in the URL and press "Fetch!" to start.'))
         hbox.pack_start(self.spr_id,True,True,2)
         hbox.pack_start(self.butt_fetch,False,True,2)
         vbox.pack_start(self.pgs,True,True,2)
@@ -39,8 +40,8 @@ class gui_main(Gtk.Window):
         self.cover = Gtk.CheckButton()
         self.cover.set_active(True)
         hbox.pack_start(self.cover,False,True,0)
-        hbox.pack_start(Gtk.Label("Include book cover"),False,True,3)
-        self.butt_outf = Gtk.Button("Choose output file...")
+        hbox.pack_start(Gtk.Label(_("Include book cover")),False,True,3)
+        self.butt_outf = Gtk.Button(_("Choose output file..."))
         self.butt_outf.connect("released",self.button_outf_cb)
         hbox.pack_end(self.butt_outf,False,True,2)
         vbox.pack_start(hbox,False,True,2)
@@ -69,7 +70,7 @@ class gui_main(Gtk.Window):
         return True
       
     def button_outf_cb(self,button,data=None):
-        chosen = Gtk.FileChooserDialog("Choose output file...",self,
+        chosen = Gtk.FileChooserDialog(_("Choose output file..."),self,
             Gtk.FileChooserAction.SAVE,
             (Gtk.STOCK_SAVE,Gtk.ResponseType.OK,
             Gtk.STOCK_CANCEL,Gtk.ResponseType.CANCEL))
@@ -79,7 +80,7 @@ class gui_main(Gtk.Window):
         chosen.destroy()
         if success == Gtk.ResponseType.OK:
             self.outf = filename
-            self.butt_outf.set_label("Output file: "+_makeshort(self.outf))
+            self.butt_outf.set_label(_("Output file: ")+_makeshort(self.outf))
          
     def write(self,s): self.pgs.set_text(s)
     def flush(self):
@@ -87,14 +88,14 @@ class gui_main(Gtk.Window):
     def writef(self,s): self.write(s); self.flush()
     def doing(self,s):
         self.write(s+"..."); self.pgs.set_fraction(0.1); self.flush()
-    def done(self,s="done"):
+    def done(self,s=_("done")):
         self.write(self.pgs.get_text()+s+".")
         self.pgs.set_fraction(1); self.flush()
     def out(self,s): self.writef(s)
-    def err(self,s): self.writef("Error: "+s)
+    def err(self,s): self.writef(_("Error: ")+s)
     def progress(self,s):
         self.pgs_text, self.pgs_b = s, 0; self.flush(); return self
-    def destroy(self): self.update(self.pgs_b,self.pgs_b," Done!")
+    def destroy(self): self.update(self.pgs_b,self.pgs_b,_(" Done!"))
     def update(self,a,b,c="..."):
         if a > b: a = b
         if b == 0: a = b = 1

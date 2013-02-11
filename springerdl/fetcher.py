@@ -16,6 +16,7 @@ import os, re
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from pyPdf import PdfFileWriter, PdfFileReader
+from gettext import gettext as _
 
 from util import *
 from pdftoc import *
@@ -53,10 +54,10 @@ class springerFetcher(object):
     def run(self):
         self.soup = getSoup(self.book_url)
         if self.soup == None:
-            self.p.err("The specified identifier doesn't point "\
-                + "to an existing Springer book resource")
+            self.p.err(_("The specified identifier doesn't point "\
+                + "to an existing Springer book resource"))
             return
-        self.p.doing("Fetching book info")
+        self.p.doing(_("Fetching book info"))
         self.fetchBookInfo()
         self.p.done()
         self.p.out(", ".join(self.info['authors']))
@@ -66,18 +67,18 @@ class springerFetcher(object):
         bookinfo += " (%d chapters)" % (self.info['chapter_cnt'])
         self.p.out(bookinfo)
         if self.include_cover:
-            self.p.doing("Fetching book cover")
+            self.p.doing(_("Fetching book cover"))
             if self.fetchCover():
                 self.p.done()
             else:
-                self.p.done("not available")
-        self.p.doing("Fetching chapter data")
+                self.p.done(_("not available"))
+        self.p.doing(_("Fetching chapter data"))
         self.fetchToc()
         self.p.done()
-        pgs = self.p.progress("Fetching chapter %d of %d")
+        pgs = self.p.progress(_("Fetching chapter %d of %d"))
         self.fetchPdfData(pgs)
         pgs.destroy()
-        self.p.doing("Preparing table of contents")
+        self.p.doing(_("Preparing table of contents"))
         self.createPdfmark()
         self.p.done()
         self.write()
@@ -270,7 +271,7 @@ class springerFetcher(object):
         self.pdfmarks += labelsToPdfmark(self.labels)
       
     def write(self):
-        self.p.doing("Concatenating")
+        self.p.doing(_("Concatenating"))
         pdf = TemporaryFile()
         self.outputPDF.write(pdf); pdf.flush(); pdf.seek(0)
         pdfmark_file = NamedTemporaryFile(delete=False)
@@ -281,7 +282,7 @@ class springerFetcher(object):
                "-dAutoRotatePages=/None","-sOutputFile="+self.outf,\
                "-",pdfmark_file.name]
         p = Popen(cmd,stdin=pdf,stdout=PIPE,stderr=PIPE)
-        pgs = self.p.progress("Writing to file (page %d of %d)")
+        pgs = self.p.progress(_("Writing to file (page %d of %d)"))
         pgs.update(0,self.total_pages)
         for line in iter(p.stdout.readline,""):
             if "Page" in line:
@@ -289,5 +290,5 @@ class springerFetcher(object):
         pdfmark_file.close()
         os.remove(pdfmark_file.name)
         pgs.destroy()
-        self.p.out("Output written to %s!" % (self.outf))
+        self.p.out(_("Output written to %s!") % (self.outf))
         

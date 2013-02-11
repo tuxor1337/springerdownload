@@ -1,0 +1,126 @@
+# German translations for PACKAGE package.
+# Copyright (C) 2013 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Thomas Vogt <tuxor1337@web.de>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-02-11 10:38+0100\n"
+"PO-Revision-Date: 2013-02-11 10:45+0100\n"
+"Last-Translator: Thomas Vogt <tuxor1337@web.de>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: springer_download.py:18
+msgid "Fetch whole books from link.springer.com."
+msgstr "Komplette Bücher von link.springer.com herunterladen."
+
+#: springer_download.py:21
+msgid "A string identifying the book, e.g. its URL or Online-ISBN."
+msgstr "Eine Zeichenkette, die das Buch eindeutig bestimmt, z.B. die URL oder Online-ISBN."
+
+#: springer_download.py:24
+msgid "Place to store, default: \"ONLINE_ISBN.pdf\"."
+msgstr "Speicherort, standardmäßig \"ONLINE_ISBN.pdf\"."
+
+#: springer_download.py:26
+msgid "Don't add front cover as first page."
+msgstr "Das Frontcover nicht als erste Seite verwenden."
+
+#: springer_download.py:28
+msgid "Save as AUTHORS - TITLE.pdf. Overwritten by -o option."
+msgstr "Als AUTOREN - TITEL.pdf speichern. Wird von -o überschrieben."
+
+#: springer_download.py:30
+msgid "Start the interactive GUI not interpreting the rest of the command line."
+msgstr "Die grafische Oberfläche starten und die restlichen Optionen nicht ausgewerten."
+
+#: springerdl/fetcher.py:57
+msgid "The specified identifier doesn't point to an existing Springer book resource"
+msgstr "Die angegebene URL oder ISBN bezieht sich auf keine existierende Springer-Resource."
+
+#: springerdl/fetcher.py:60
+msgid "Fetching book info"
+msgstr "Buchinformationen holen"
+
+#: springerdl/fetcher.py:70
+msgid "Fetching book cover"
+msgstr "Buchcover holen"
+
+#: springerdl/fetcher.py:74
+msgid "not available"
+msgstr "nicht verfügbar"
+
+#: springerdl/fetcher.py:75
+msgid "Fetching chapter data"
+msgstr "Kapiteldaten holen"
+
+#: springerdl/fetcher.py:78
+#, python-format
+msgid "Fetching chapter %d of %d"
+msgstr "Hole Kapitel %d von %d"
+
+#: springerdl/fetcher.py:81
+msgid "Preparing table of contents"
+msgstr "Inhaltsverzeichnis vorbereiten"
+
+#: springerdl/fetcher.py:274
+msgid "Concatenating"
+msgstr "Zusammenfügen"
+
+#: springerdl/fetcher.py:285
+#, python-format
+msgid "Writing to file (page %d of %d)"
+msgstr "Schreibe in Datei (Seite %d von %d)"
+
+#: springerdl/fetcher.py:293
+#, python-format
+msgid "Output written to %s!"
+msgstr "Ausgabe geschrieben in %s!"
+
+#: springerdl/gui.py:29
+msgid "Fetch!"
+msgstr "Los!"
+
+#: springerdl/gui.py:34
+msgid "Type in the URL and press \"Fetch!\" to start."
+msgstr "URL eingeben und \"Los!\" klicken, um zu beginnen."
+
+#: springerdl/gui.py:43
+msgid "Include book cover"
+msgstr "Buchcover einschließen"
+
+#: springerdl/gui.py:44 springerdl/gui.py:73
+msgid "Choose output file..."
+msgstr "Ausgabedatei wählen..."
+
+#: springerdl/gui.py:83
+msgid "Output file: "
+msgstr "Ausgabe:"
+
+#: springerdl/gui.py:91
+msgid "done"
+msgstr "fertig"
+
+#: springerdl/gui.py:95
+msgid "Error: "
+msgstr "Fehler: "
+
+#: springerdl/gui.py:98
+msgid " Done!"
+msgstr " Fertig!"
+
+#: springerdl/util.py:81
+msgid "Can't decode"
+msgstr "Dekodieren fehlgeschlagen: "
+
+#: springerdl/util.py:95
+#, python-format
+msgid "Connection to %s failed."
+msgstr "Verbindung zu %s fehlgeschlagen."

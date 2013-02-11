@@ -1,0 +1,126 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2013-02-11 10:38+0100\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: springer_download.py:18
+msgid "Fetch whole books from link.springer.com."
+msgstr ""
+
+#: springer_download.py:21
+msgid "A string identifying the book, e.g. its URL or Online-ISBN."
+msgstr ""
+
+#: springer_download.py:24
+msgid "Place to store, default: \"ONLINE_ISBN.pdf\"."
+msgstr ""
+
+#: springer_download.py:26
+msgid "Don't add front cover as first page."
+msgstr ""
+
+#: springer_download.py:28
+msgid "Save as AUTHORS - TITLE.pdf. Overwritten by -o option."
+msgstr ""
+
+#: springer_download.py:30
+msgid "Start the interactive GUI not interpreting the rest of the command line."
+msgstr ""
+
+#: springerdl/fetcher.py:57
+msgid "The specified identifier doesn't point to an existing Springer book resource"
+msgstr ""
+
+#: springerdl/fetcher.py:60
+msgid "Fetching book info"
+msgstr ""
+
+#: springerdl/fetcher.py:70
+msgid "Fetching book cover"
+msgstr ""
+
+#: springerdl/fetcher.py:74
+msgid "not available"
+msgstr ""
+
+#: springerdl/fetcher.py:75
+msgid "Fetching chapter data"
+msgstr ""
+
+#: springerdl/fetcher.py:78
+#, python-format
+msgid "Fetching chapter %d of %d"
+msgstr ""
+
+#: springerdl/fetcher.py:81
+msgid "Preparing table of contents"
+msgstr ""
+
+#: springerdl/fetcher.py:274
+msgid "Concatenating"
+msgstr ""
+
+#: springerdl/fetcher.py:285
+#, python-format
+msgid "Writing to file (page %d of %d)"
+msgstr ""
+
+#: springerdl/fetcher.py:293
+#, python-format
+msgid "Output written to %s!"
+msgstr ""
+
+#: springerdl/gui.py:29
+msgid "Fetch!"
+msgstr ""
+
+#: springerdl/gui.py:34
+msgid "Type in the URL and press \"Fetch!\" to start."
+msgstr ""
+
+#: springerdl/gui.py:43
+msgid "Include book cover"
+msgstr ""
+
+#: springerdl/gui.py:44 springerdl/gui.py:73
+msgid "Choose output file..."
+msgstr ""
+
+#: springerdl/gui.py:83
+msgid "Output file: "
+msgstr ""
+
+#: springerdl/gui.py:91
+msgid "done"
+msgstr ""
+
+#: springerdl/gui.py:95
+msgid "Error: "
+msgstr ""
+
+#: springerdl/gui.py:98
+msgid " Done!"
+msgstr ""
+
+#: springerdl/util.py:81
+msgid "Can't decode"
+msgstr ""
+
+#: springerdl/util.py:95
+#, python-format
+msgid "Connection to %s failed."
+msgstr ""
