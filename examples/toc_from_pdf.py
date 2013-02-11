@@ -48,33 +48,33 @@ toc = getTocFromPdf(pdf)
 # implement a function for this conversion task.
 
 def convertTocAtoB(tA,lt):
-   i = 0; tB = []
-   while i < lt:
-      ch = { 'title': tA[i][0] }
-      if i+1 < len(tA): ch['page_range'] = (tA[i][1],tA[i+1][1]-1)
-      else: ch['page_range'] = (tA[i][1],tA[i][1]+1)
-      j = i+1
-      while j < lt and tA[j][2] > tA[i][2]: j+=1
-      ch['children'] = convertTocAtoB(tA[i+1:],j-i-1)
-      i = j; tB.append(ch)
-   return tB
+    i = 0; tB = []
+    while i < lt:
+        ch = { 'title': tA[i][0] }
+        if i+1 < len(tA): ch['page_range'] = (tA[i][1],tA[i+1][1]-1)
+        else: ch['page_range'] = (tA[i][1],tA[i][1]+1)
+        j = i+1
+        while j < lt and tA[j][2] > tA[i][2]: j+=1
+        ch['children'] = convertTocAtoB(tA[i+1:],j-i-1)
+        i = j; tB.append(ch)
+    return tB
    
 converted_toc =  convertTocAtoB(toc,len(toc))
 
 if args.gui:
-   from toc_gui_gtk import toc_gui
-   toc_gui(converted_toc)
+    from toc_gui_gtk import toc_gui
+    toc_gui(converted_toc)
 elif args.pdfmark:
-   from springerdl.pdfmark import tocToPdfmark, labelsToPdfmark
-   print tocToPdfmark(toc)
-   print labelsToPdfmark(getPagelabelsFromPdf(pdf))
+    from springerdl.pdfmark import tocToPdfmark, labelsToPdfmark
+    print tocToPdfmark(toc)
+    print labelsToPdfmark(getPagelabelsFromPdf(pdf))
 else:
-   def printToc(toc,lvl=0):
-      for el in toc:
-         print "-" * (lvl+1),
-         print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
-         print el['title']
-         if len(el['children']) != 0:
-            iterateRec(func,el['children'],lvl+1)
-   printToc(toc)
+    def printToc(toc,lvl=0):
+        for el in toc:
+            print "-" * (lvl+1),
+            print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
+            print el['title']
+            if len(el['children']) != 0:
+                iterateRec(func,el['children'],lvl+1)
+    printToc(toc)
    
