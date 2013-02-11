@@ -11,7 +11,8 @@ def _getDestinationPageNumbers(pdf):
         if _result is None:
             _result = {}
         for obj in outline:
-            if isinstance(obj, pyPdf.pdf.Destination):
+            if isinstance(obj, pyPdf.pdf.Destination) and not \
+                isinstance(obj.page, pyPdf.generic.NullObject):
                 _result[(id(obj), obj.title)] = (obj.page.idnum,lvl)
             elif isinstance(obj, list):
                 _setup_outline_page_ids(obj, _result,lvl+1)

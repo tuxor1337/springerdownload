@@ -28,13 +28,33 @@ def infoToPdfmark(i):
     return marks
 
 def tocToPdfmark(toc,filt=lambda x:x):
-    marks = ""
-    for a,b,c,d in toc:
-        marks += "["
-        if d > 0: marks += "/Count -%d " % (d)
-        marks += "/Title <FEFF%s> /View [/XYZ null null null] /Page %d  /OUT pdfmark\n" \
-                           % (_uniconvHex(filt(a.strip())),b)
-    return marks
+    def convertTocAtoB(tA,lt):
+        i = 0; tB = []
+        while i < lt:
+            ch = { 'title': tA[i][0] }
+            if i+1 < len(tA): 
+                if tA[i+1][1] == tA[i][1]:
+                    ch['page_range'] = (tA[i][1],tA[i][1])
+                else:
+                    ch['page_range'] = (tA[i][1],tA[i+1][1]-1)
+            else: ch['page_range'] = (tA[i][1],tA[i][1])
+            j = i+1
+            while j < lt and tA[j][2] > tA[i][2]: j+=1
+            ch['children'] = convertTocAtoB(tA[i+1:],j-i-1)
+            i = j; tB.append(ch)
+        return tB
+        
+    tocB = convertTocAtoB(toc,len(toc))
+    def getmark(t):
+        m = ""
+        for c in t:
+            m += "["
+            if len(c['children']) > 0: m += "/Count -%d " % (len(c['children']))
+            m += "/Title <FEFF%s> /View [/XYZ null null null] /Page %d  /OUT pdfmark\n" \
+                               % (_uniconvHex(filt(c['title'].strip())),c['page_range'][0])
+            if len(c['children']) > 0: m += getmark(c['children'])
+        return m
+    return getmark(tocB)
    
 def labelsToPdfmark(pls):
     if len(pls) == 0: return ""
