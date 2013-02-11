@@ -3,10 +3,10 @@ import os, sys
 from distutils.core import setup
 from distutils.dep_util import newer
 from distutils.command.build_scripts \
-      import build_scripts as distutils_build_scripts
+        import build_scripts as distutils_build_scripts
 from distutils.command.bdist_dumb import bdist_dumb
 
-VERSION = "1.0.1"
+VERSION = "1.0.2"
 
 class build_scripts(distutils_build_scripts):
     def run(self):
@@ -61,6 +61,5 @@ setup(name='Springer Link Downloader',
       url='https://github.com/tuxor1337/springerdownload',
       packages=["springerdl"],
       scripts=["springer_download.py"],
-      install_requires=['pyPDF', 'beautifulsoup'],
       data_files=data_files
      )

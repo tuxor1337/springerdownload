@@ -12,27 +12,27 @@ from sys import stdout
 ########################## Standard Output Class  ##############################
 
 class printer:
-   def __init__(self, p=stdout): self.p = p
-   def doing(self,s): self.p.write("==> %s..." % (s)); self.p.flush()
-   def done(self,s="done"): self.p.write(s+".\n"); self.p.flush()
-   def out(self,s): self.p.write(s+"\n"); self.p.flush()
-   def err(self,s): self.p.write("Error: "+s+"\n"); self.p.flush()
-   def progress(self,text): return cli_progress(text,self.p)
+    def __init__(self, p=stdout): self.p = p
+    def doing(self,s): self.p.write("==> %s..." % (s)); self.p.flush()
+    def done(self,s="done"): self.p.write(s+".\n"); self.p.flush()
+    def out(self,s): self.p.write(s+"\n"); self.p.flush()
+    def err(self,s): self.p.write("Error: "+s+"\n"); self.p.flush()
+    def progress(self,text): return cli_progress(text,self.p)
 
 class cli_progress:
-   def __init__(self,text,p=stdout):
-      self.txt, self.b, self.p = "==> "+text+"...", 0, p
-      
-   def update(self,a,b,c="\r"):
-      self.b = b; a = b if a > b else a
-      if b == 0: a = b = 1
-      text = self.txt % (a,b); width = 70-len(text)
-      marks = floor(width * (float(a)/float(b)))
-      loader = '[' + ('=' * int(marks)) + (' ' * int(width - marks)) + ']'
-      self.p.write("%s %s%s" % (text,loader,c)), self.p.flush()
+    def __init__(self,text,p=stdout):
+        self.txt, self.b, self.p = "==> "+text+"...", 0, p
+    
+    def update(self,a,b,c="\r"):
+        self.b = b; a = b if a > b else a
+        if b == 0: a = b = 1
+        text = self.txt % (a,b); width = 70-len(text)
+        marks = floor(width * (float(a)/float(b)))
+        loader = '[' + ('=' * int(marks)) + (' ' * int(width - marks)) + ']'
+        self.p.write("%s %s%s" % (text,loader,c)), self.p.flush()
          
-   def destroy(self):
-      if self.b != 0: self.update(self.b,self.b," Done! \n")
+    def destroy(self):
+        if self.b != 0: self.update(self.b,self.b," Done! \n")
 
 ################################## Little Helpers ##############################
 
@@ -59,42 +59,42 @@ def roman_to_int(n):
     return result
 
 def repairChars(s):
-   if type(s) != unicode:
-      try:
-         s = s.decode("utf8")
-      except UnicodeDecodeError:
-         print s
-         print type(s)
-   for a,b in zip( (u'¨a',u'¨o',u'¨u',u'¨A',u'¨O',u'¨U'), \
-                   (u'ä',u'ö',u'ü',u'Ä',u'Ö',u'Ü')):
-      s = s.replace(a,b)
-   return s
+    if type(s) != unicode:
+        try:
+            s = s.decode("utf8")
+        except UnicodeDecodeError:
+            print s
+            print type(s)
+    for a,b in zip( (u'¨a',u'¨o',u'¨u',u'¨A',u'¨O',u'¨U'), \
+                    (u'ä',u'ö',u'ü',u'Ä',u'Ö',u'Ü')):
+        s = s.replace(a,b)
+    return s
    
 def decodeForSure(s):
-   if type(s) == unicode: return s
-   try: return unicode(s)
-   except:
-      for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
-         try: return s.decode(charset)
-         except: pass
-      print "Couldn't decode s='%s',  type(s)=%s" % (s,type(s))
-      return s.decode("ascii","replace")
+    if type(s) == unicode: return s
+    try: return unicode(s)
+    except:
+        for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
+            try: return s.decode(charset)
+            except: pass
+        print "Couldn't decode s='%s',  type(s)=%s" % (s,type(s))
+        return s.decode("ascii","replace")
 
 ################################## Soup helpers ################################
 
 def getSoup(url,params=None,charset='utf8'):
-   hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
-   hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
-                        lambda m: '&#%d;' % int(m.group(1), 16))]
-   try:
-      html = urllib2.urlopen(url,params).read().decode(charset)
-      soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
-               markupMassage=hexentityMassage)
-   except (urllib2.URLError,httplib.BadStatusLine):
-      print "Connection to %s failed." % url
-      return None
-   return soup
+    hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
+    hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
+                            lambda m: '&#%d;' % int(m.group(1), 16))]
+    try:
+        html = urllib2.urlopen(url,params).read().decode(charset)
+        soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
+                markupMassage=hexentityMassage)
+    except (urllib2.URLError,httplib.BadStatusLine):
+        print "Connection to %s failed." % url
+        return None
+    return soup
 
 def cleanSoup(soup):
-   return u''.join(soup.findAll(text=True))
+    return u''.join(soup.findAll(text=True))
    
