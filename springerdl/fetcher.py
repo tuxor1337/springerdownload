@@ -182,17 +182,17 @@ class springerFetcher(object):
       
         def parsePartItem(chl,li):
             for subh3,subol in zip(li("h3",recursive=False), \
-                                li("ol",recursive=False)):
+                                   li("ol",recursive=False)):
                 pdf_url = page_range = ""
                 fr_matt = subol("li",recursive=False, \
                     attrs={"class":re.compile(r'\bfront-matter-item\b')})
-            if len(fr_matt) != 0:
-               fr_matt = fr_matt[0].extract()
-               pdf_url = fr_matt("a")[0]["href"]
-               page_range = cleanSoup(fr_matt.find("p",\
-                                             {"class" : "page-range" }))
-            append_ch(chl, cleanSoup(subh3).strip(), \
-                  getTocRec(subol), pdf_url, [],page_range)
+                if len(fr_matt) != 0:
+                   fr_matt = fr_matt[0].extract()
+                   pdf_url = fr_matt("a")[0]["href"]
+                   page_range = cleanSoup(fr_matt.find("p",\
+                                                 {"class" : "page-range" }))
+                append_ch(chl, cleanSoup(subh3).strip(), \
+                    getTocRec(subol), pdf_url, [],page_range)
                   
         def parseChItem(chl,li):
             try: title = cleanSoup(li.h3)
@@ -261,7 +261,6 @@ class springerFetcher(object):
                 self.extracted_toc.append([el['title'],1+self.total_pages,\
                                                      lvl,len(el['children'])])
             return el
-            
         iterateRec(accessible_toc,fetchCh)
       
 ############################ Output to file ####################################
