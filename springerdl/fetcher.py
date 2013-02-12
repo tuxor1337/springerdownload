@@ -158,10 +158,10 @@ class springerFetcher(object):
         tmp_dpc = self.soup.find("span", {"class" : "number-of-pages" })
         dl_page_cnt = int(tmp_dpc.string) if tmp_dpc != None else 1
         for i in range(1,dl_page_cnt+1):
-         self.toc = tocMerge(self.toc,\
-            self.tocFromDiv(self.soup.find("div", {"class" : "toc"})))
-         if i < dl_page_cnt:
-            self.soup = getSoup("%s/page/%d"  % (self.book_url,i+1))
+            self.toc = tocMerge(self.toc,\
+                self.tocFromDiv(self.soup.find("div", {"class" : "toc"})))
+            if i < dl_page_cnt:
+                self.soup = getSoup("%s/page/%d"  % (self.book_url,i+1))
 
     def tocFromDiv(self,div):
         def append_ch(ch_list,title="", children=[], pdf_url="", \
@@ -204,10 +204,10 @@ class springerFetcher(object):
                 pdf_url = link["href"] if "Download PDF" in cleanSoup(link) else ""
             except: pdf_url = ""
             append_ch(chl, title, [], pdf_url, \
-            [cleanSoup(x.a).strip() \
-                  for x in li("li", {"itemprop" : "author"})], \
-            cleanSoup(li.find("p", {"class" : "page-range" })), \
-            "no-access" in li['class'])
+                [cleanSoup(x.a).strip() \
+                    for x in li("li", {"itemprop" : "author"})], \
+                cleanSoup(li.find("p", {"class" : "page-range" })), \
+                "no-access" in li['class'])
          
         def getTocRec(ol):
             chl = []
@@ -215,6 +215,7 @@ class springerFetcher(object):
                 if "part-item" in li['class']: parsePartItem(chl,li)
                 else: parseChItem(chl,li)
             return chl
+            
         return getTocRec(div.ol)
             
 ############################ Fetch PDF Files ###################################
@@ -236,8 +237,8 @@ class springerFetcher(object):
         def iterateRec(t,func,lvl=0):
             for el in t:
                 el = func(el,lvl)
-            if len(el['children']) != 0:
-                iterateRec(el['children'],func,lvl+1)
+                if len(el['children']) != 0:
+                    iterateRec(el['children'],func,lvl+1)
                 
         def fetchCh(el,lvl):
             if el['pdf_url'] != "":
