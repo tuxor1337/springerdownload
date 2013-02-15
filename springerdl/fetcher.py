@@ -24,8 +24,20 @@ from pdfmark import *
 
 SPRINGER_URL = "http://link.springer.com"
 SPR_IMG_URL  = "http://images.springer.com"
-GS_BIN       = "/usr/bin/gs"
-IM_BIN       = "/usr/bin/convert"
+
+GS_BIN = IM_BIN = None
+for p in reversed(os.getenv("PATH").split(":")):
+    candidate = os.path.join(p,"gs")
+    if os.path.isfile(candidate):
+        GS_BIN = candidate
+    candidate = os.path.join(p,"convert")
+    if os.path.isfile(candidate):
+        IM_BIN = candidate
+        
+if GS_BIN == None or IM_BIN == None:
+    from sys import exit
+    print "Couldn't locate ImageMagick (convert) and Ghostscript (gs) binaries."
+    exit(1)
 
 ################################################################################
 ################################## Fetcher #####################################
@@ -39,7 +51,7 @@ class springerFetcher(object):
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
         self.outputPDF = PdfFileWriter(); self.labels = []
         self.extracted_toc = []; self.total_pages = 0
-    
+        
     def parseSpringerURL(self,url):
         url = url.replace("http://","")
         url = url.replace("link.springer.com/","")
