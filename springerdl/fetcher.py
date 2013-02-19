@@ -47,8 +47,7 @@ class springerFetcher(object):
     def __init__(self, springer_id, outf, p, cover=True, \
                  autotitle=False, pause=0):
         self.p, self.outf, self.autotitle = p, outf, autotitle
-        self.pause, self.minwait, self.maxwait = pause, minwait, maxwait
-        self.include_cover = cover
+        self.include_cover, self.pause = cover, pause
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
         self.outputPDF = PdfFileWriter(); self.labels = []
