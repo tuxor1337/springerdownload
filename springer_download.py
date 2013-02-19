@@ -21,17 +21,20 @@ def main(argv=sys.argv):
                         type=str, help = _('A string identifying the book, '
                                        + 'e.g. its URL or Online-ISBN.'))
         parser.add_argument('-o','--output', metavar='FILE', type=str, 
-                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))
+                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))  
         parser.add_argument('--no-cover', action="store_true", default=False,
                         help=_("Don't add front cover as first page."))
         parser.add_argument('--autotitle', action="store_true", default=False,
                         help=_("Save as AUTHORS - TITLE.pdf. Overwritten by -o option."))
         parser.add_argument('--gui', action="store_true", default=False,
-                        help=_("Start the interactive GUI not interpreting "
-                            + "the rest of the command line."))
+                        help=_("Start the interactive GUI not interpreting the "\
+                                + "rest of the command line."))
+        parser.add_argument('--pause', metavar='T', type=int, default=0,
+                        help=_("Add a pause of between 0.6*T and 1.4*T seconds "\
+                                + "before each download to simulate human behaviour."))
         args = parser.parse_args()
-        fet = springerFetcher(args.springername,args.output,\
-                  printer(),not args.no_cover,args.autotitle)
+        fet = springerFetcher(args.springername, args.output,\
+                  printer(), not args.no_cover, args.autotitle, args.pause)
         fet.run()
     else:
         from springerdl.gui import gui_main

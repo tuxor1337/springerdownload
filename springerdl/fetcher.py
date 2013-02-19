@@ -12,7 +12,7 @@ except:
     from urllib.error import URLError
     from http.client import BadStatusLine
     
-import os, re
+import os, re, random
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from pyPdf import PdfFileWriter, PdfFileReader
@@ -44,8 +44,10 @@ if GS_BIN == None or IM_BIN == None:
 ################################################################################
    
 class springerFetcher(object):
-    def __init__(self, springer_id,outf,p,cover=True,autotitle=False):
+    def __init__(self, springer_id, outf, p, cover=True, \
+                 autotitle=False, pause=0):
         self.p, self.outf, self.autotitle = p, outf, autotitle
+        self.pause, self.minwait, self.maxwait = pause, minwait, maxwait
         self.include_cover = cover
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
@@ -62,12 +64,16 @@ class springerFetcher(object):
             return m.group(3)
         except:
             return None
+            
+    def pauseBeforeHttpGet(self):
+        if self.pause > 0:	
+            time.sleep((0.6 + random.random()*0.8)*self.pause)
    
     def run(self):
+        self.pauseBeforeHttpGet()
         self.soup = getSoup(self.book_url)
         if self.soup == None:
-            self.p.err(_("The specified identifier doesn't point "\
-                + "to an existing Springer book resource"))
+            self.p.err(_("The specified identifier doesn't point to an existing Springer book resource"))
             return
         self.p.doing(_("Fetching book info"))
         self.fetchBookInfo()
@@ -173,6 +179,7 @@ class springerFetcher(object):
             self.toc = tocMerge(self.toc,\
                 self.tocFromDiv(self.soup.find("div", {"class" : "toc"})))
             if i < dl_page_cnt:
+                self.pauseBeforeHttpGet()
                 self.soup = getSoup("%s/page/%d"  % (self.book_url,i+1))
 
     def tocFromDiv(self,div):
@@ -255,6 +262,7 @@ class springerFetcher(object):
         def fetchCh(el,lvl):
             if el['pdf_url'] != "":
                 pdf = TemporaryFile()
+                self.pauseBeforeHttpGet()
                 webPDF  = urlopen(SPRINGER_URL + el['pdf_url'])
                 pdf.write(webPDF.read())
                 inputPDF = PdfFileReader(pdf)
@@ -293,7 +301,7 @@ class springerFetcher(object):
         cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
                "-dAutoRotatePages=/None","-sOutputFile="+self.outf,\
                "-",pdfmark_file.name]
-        p = Popen(cmd,stdin=pdf,stdout=PIPE,stderr=PIPE)
+        p = Popen(cmd,stdin=pdf,stdout=PIPE)
         pgs = self.p.progress(_("Writing to file (page %d of %d)"))
         pgs.update(0,self.total_pages)
         for line in iter(p.stdout.readline,""):
