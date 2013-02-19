@@ -12,7 +12,7 @@ except:
     from urllib.error import URLError
     from http.client import BadStatusLine
     
-import os, re, random
+import os, re, random, time
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from pyPdf import PdfFileWriter, PdfFileReader
