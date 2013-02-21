@@ -32,9 +32,18 @@ def main(argv=sys.argv):
         parser.add_argument('--pause', metavar='T', type=int, default=0,
                         help=_("Add a pause of between 0.6*T and 1.4*T seconds "\
                                 + "before each download to simulate human behaviour."))
+        parser.add_argument('--blanks', action="store_true", default=False,
+                        help=_("Insert blank pages between chapters such that "\
+                                + "each chapter begins at an odd page number."))
+        parser.add_argument('--double-pages', action="store_true", default=False,
+                        help=_("Use only together with --blanks. Inserts blank "\
+                                + "pages, such that the resulting PDF can be "\
+                                + "printed in duplex mode with four pages per "\
+                                + "sheet."))
         args = parser.parse_args()
         fet = springerFetcher(args.springername, args.output,\
-                  printer(), not args.no_cover, args.autotitle, args.pause)
+                  printer(), not args.no_cover, args.autotitle, args.pause,\
+                  args.blanks, args.double_pages)
         fet.run()
     else:
         from springerdl.gui import gui_main

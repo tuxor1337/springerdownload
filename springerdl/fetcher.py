@@ -45,9 +45,10 @@ if GS_BIN == None or IM_BIN == None:
    
 class springerFetcher(object):
     def __init__(self, springer_id, outf, p, cover=True, \
-                 autotitle=False, pause=0):
+                 autotitle=False, pause=0, blanks=False, dbpage=False):
         self.p, self.outf, self.autotitle = p, outf, autotitle
         self.include_cover, self.pause = cover, pause
+        self.blanks, self.dbpage = blanks,dbpage
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
         self.outputPDF = PdfFileWriter(); self.labels = []
@@ -67,6 +68,18 @@ class springerFetcher(object):
     def pauseBeforeHttpGet(self):
         if self.pause > 0:	
             time.sleep((0.6 + random.random()*0.8)*self.pause)
+    
+    def insertBlankPage(self):
+        tmp_blankpdf = NamedTemporaryFile(delete=False,suffix=".pdf")
+        cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
+               "-dDEVICEWIDTHPOINTS=%f" % self.info['pagesize'][0],\
+               "-dDEVICEHEIGHTPOINTS=%f" % self.info['pagesize'][1],\
+               "-sOutputFile=%s" % tmp_blankpdf.name]
+        p = Popen(cmd, stdin=PIPE, stdout=PIPE)
+        p.communicate(input="")
+        tmp_blankp = PdfFileReader(tmp_blankpdf)
+        self.outputPDF.addPage(tmp_blankp.pages[0])
+        self.total_pages += 1
    
     def run(self):
         self.pauseBeforeHttpGet()
@@ -83,12 +96,6 @@ class springerFetcher(object):
             bookinfo += ": %s" % (self.info['subtitle'])
         bookinfo += " (%d chapters)" % (self.info['chapter_cnt'])
         self.p.out(bookinfo)
-        if self.include_cover:
-            self.p.doing(_("Fetching book cover"))
-            if self.fetchCover():
-                self.p.done()
-            else:
-                self.p.done(_("not available"))
         self.p.doing(_("Fetching chapter data"))
         self.fetchToc()
         self.p.done()
@@ -130,27 +137,6 @@ class springerFetcher(object):
                                                 self.info['title'])
             else:
                 self.outf = self.info['online_isbn']+".pdf"
-      
-################################## Cover #######################################
-
-    def fetchCover(self):
-        try:
-            webImg = urlopen("%s/covers/%s.tif" \
-                           % (SPR_IMG_URL,self.info['print_isbn']))
-            tmp_img    = NamedTemporaryFile(delete=False,suffix=".tif")
-            tmp_pdfimg = NamedTemporaryFile(delete=False,suffix=".pdf")
-            tmp_img.write(webImg.read()); tmp_img.close()
-            p = Popen([IM_BIN,tmp_img.name,tmp_pdfimg.name],\
-                   stdout=PIPE,stderr=PIPE)
-            p.communicate(); os.remove(tmp_img.name)
-            tmp_cover = PdfFileReader(tmp_pdfimg)
-            self.outputPDF.addPage(tmp_cover.pages[0])
-            self.extracted_toc += getTocFromPdf(tmp_cover,self.total_pages,"Cover")
-            self.labels += [[0,{"/P":"(Cover)"}],[1,{"/S":"/D"}]]
-            self.total_pages += 1
-            return True
-        except (URLError, BadStatusLine):
-            return False
    
 ################################ Fetch TOC #####################################
 
@@ -235,6 +221,29 @@ class springerFetcher(object):
             return chl
             
         return getTocRec(div.ol)
+      
+################################## Cover #######################################
+
+    def fetchCover(self):
+        try:
+            webImg = urlopen("%s/covers/%s.tif" \
+                           % (SPR_IMG_URL,self.info['print_isbn']))
+            tmp_img    = NamedTemporaryFile(delete=False,suffix=".tif")
+            tmp_pdfimg = NamedTemporaryFile(delete=False,suffix=".pdf")
+            tmp_img.write(webImg.read()); tmp_img.close()
+            cmd = [IM_BIN, "-resize","%fx%f" % (2*self.info['pagesize'][0],\
+                                                2*self.info['pagesize'][1]),\
+                       "-density", "140", tmp_img.name,tmp_pdfimg.name]
+            p = Popen(cmd,stdout=PIPE,stderr=PIPE)
+            p.communicate(); os.remove(tmp_img.name)
+            tmp_cover = PdfFileReader(tmp_pdfimg)
+            self.outputPDF.addPage(tmp_cover.pages[0])
+            self.extracted_toc += getTocFromPdf(tmp_cover,self.total_pages,"Cover")
+            self.labels += [[0,{"/P":"(Cover)"}],[1,{"/S":"/D"}]]
+            self.total_pages += 1
+            return True
+        except (URLError, BadStatusLine):
+            return False
             
 ############################ Fetch PDF Files ###################################
 
@@ -265,14 +274,37 @@ class springerFetcher(object):
                 webPDF  = urlopen(SPRINGER_URL + el['pdf_url'])
                 pdf.write(webPDF.read())
                 inputPDF = PdfFileReader(pdf)
+                el['page_cnt'] = 0
+                if self.tmp_pgs_j == 0:
+                    tmp_box = inputPDF.pages[0].mediaBox
+                    self.info['pagesize'] = (tmp_box[2], tmp_box[3])
+                    if self.include_cover:
+                        self.p.doing(_("Fetching book cover"))
+                        if self.fetchCover():
+                            self.p.done()
+                        else:
+                            self.p.done(_("not available"))
+                    if pgs != None:
+                        pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
+                    el['page_cnt'] = 1
                 [self.outputPDF.addPage(x) for x in inputPDF.pages]
                 self.extracted_toc += getTocFromPdf(inputPDF,self.total_pages,\
                             el['title'],lvl,len(el['children']))
                 pr = el['page_range'][0] if el['page_range'][0] != 0 else -999
                 self.labels += getPagelabelsFromPdf(inputPDF,\
-                                                        self.total_pages,pr)
-                el['page_cnt'] = inputPDF.getNumPages()
-                self.total_pages += el['page_cnt']
+                                          self.total_pages,pr)
+                el['page_cnt'] += inputPDF.getNumPages()
+                self.total_pages += inputPDF.getNumPages()
+                if self.blanks:
+                    if self.dbpage:
+                        if self.tmp_pgs_j == 0:
+                            test_n = (4-((el['page_cnt']-1)%4))%4
+                        else: test_n = (4-(el['page_cnt']%4))%4
+                        for x in range(test_n):
+                            self.insertBlankPage()
+                    else:
+                        for x in range(el['page_cnt'] % 2):
+                            self.insertBlankPage()
                 self.tmp_pgs_j += 1
                 if pgs != None:
                     pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
