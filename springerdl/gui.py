@@ -15,6 +15,7 @@ def _makeshort(s,max=35):
 class gui_main(Gtk.Window):
     def __init__(self,fet):
         Gtk.Window.__init__(self)
+        self.fet = None
         self.sprFet = fet
         self.outf = None
 
@@ -47,10 +48,16 @@ class gui_main(Gtk.Window):
         vbox.pack_start(hbox,False,True,2)
         self.add(vbox)
 
-        self.connect("destroy", Gtk.main_quit)
+        self.connect("destroy", self.destroy_cb)
         self.show_all()
 
         Gtk.main()
+        
+    def destroy_cb(self,*args):
+        Gtk.main_quit()
+        if self.fet != None:
+            import sys
+            sys.exit(1)
       
     def button_key_cb(self,widget,event,data=None):
         if event.type == Gdk.EventType.KEY_PRESS \
@@ -59,12 +66,14 @@ class gui_main(Gtk.Window):
             return True
       
     def button_cb(self,button,data=None):
-        fet = self.sprFet(self.spr_id.get_text(),self.outf,\
-                                 self,self.cover.get_active())
+        opts = {
+            "cover": self.cover.get_active(),
+        }
+        self.fet = self.sprFet(self.spr_id.get_text(),self.outf,self,opts)
         self.pgs.set_fraction(0)
         [x.set_sensitive(False) for x in [self.spr_id,self.butt_outf,\
                               self.butt_fetch, self.cover]]
-        fet.run()
+        self.fet.run()
         [x.set_sensitive(True) for x in [self.spr_id,self.butt_outf,\
                               self.butt_fetch, self.cover]]
         return True
@@ -96,6 +105,7 @@ class gui_main(Gtk.Window):
     def progress(self,s):
         self.pgs_text, self.pgs_b = s, 0; self.flush(); return self
     def destroy(self): self.update(self.pgs_b,self.pgs_b,_(" Done!"))
+    def set_text(self,txt): self.pgs_text = txt
     def update(self,a,b,c="..."):
         if a > b: a = b
         if b == 0: a = b = 1

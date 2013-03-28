@@ -16,14 +16,14 @@ class printer:
     def __init__(self, p=stdout):
         self.p = p; self.busy = False
     def doing(self,s):
-        self.p.write("==> %s..." % (s));
+        self.relax(); self.p.write("==> %s..." % (s));
         self.p.flush(); self.busy = True
     def done(self,s="done"): self.p.write(s+"."); self.relax(); self.p.flush()
     def out(self,s):
         self.relax(); self.p.write(s+"\n"); self.p.flush()
     def err(self,s):
         self.relax(); self.p.write("Error: "+s+"\n"); self.p.flush()
-    def progress(self,text): return cli_progress(text,self.p)
+    def progress(self,text): self.busy = True; return cli_progress(text,self.p)
     def relax(self):
         if self.busy: self.p.write("\n")
         self.busy = False
@@ -31,6 +31,9 @@ class printer:
 class cli_progress:
     def __init__(self,text,p=stdout):
         self.txt, self.b, self.p = "==> "+text+"...", 0, p
+    
+    def set_text(self,txt):
+        self.txt = "==> "+txt+"..."
     
     def update(self,a,b,c="\r"):
         self.b = b; a = b if a > b else a

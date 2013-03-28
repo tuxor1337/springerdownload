@@ -48,6 +48,7 @@ from pdfmark import *
 
 SPRINGER_URL = "http://link.springer.com"
 SPR_IMG_URL  = "http://images.springer.com"
+DOWNLOAD_CHUNK_SIZE = 65536
 
 BINPATH = { "gs": None, "pdftk": None, "convert": None}
 for p in reversed(os.getenv("PATH").split(":")):
@@ -137,7 +138,7 @@ class springerFetcher(object):
         self.p.doing(_("Fetching chapter data"))
         self.fetchToc()
         self.p.done()
-        pgs = self.p.progress(_("Fetching chapter %d of %d"))
+        pgs = self.p.progress("")
         self.fetchPdfData(pgs)
         pgs.destroy()
         self.p.doing(_("Preparing table of contents"))
@@ -308,10 +309,21 @@ class springerFetcher(object):
                 
         def fetchCh(el,lvl):
             if el['pdf_url'] != "":
+                if pgs != None:
+                    pgs.set_text(_("Chapter %d/%d, downloading %%d/%%d kB") \
+                        % (self.tmp_pgs_j,self.info['chapter_cnt']))
                 pdf = NamedTemporaryFile(delete=False)
                 self.pauseBeforeHttpGet()
                 webPDF  = urlopen(SPRINGER_URL + el['pdf_url'])
-                pdf.write(webPDF.read())
+                file_size = int(webPDF.info().getheader('Content-Length').strip())
+                downloaded_size = 0
+                while 1:
+                    data = webPDF.read(DOWNLOAD_CHUNK_SIZE)
+                    pdf.write(data)
+                    if not data:
+                        break
+                    downloaded_size += len(data)
+                    pgs.update(downloaded_size/1024,file_size/1024)
                 self.chPdf.append(pdf)
                 
                 inputPDF = pyPdf.PdfFileReader(pdf)
@@ -331,8 +343,6 @@ class springerFetcher(object):
                                 self.p.done()
                             else:
                                 self.p.done(_("not available"))
-                    if pgs != None:
-                        pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
                     el['page_cnt'] = 1
                 
                 # Add downloaded pdf to stack
@@ -356,9 +366,6 @@ class springerFetcher(object):
                         for x in range(el['page_cnt'] % 2):
                             self.insertBlankPage()
                 self.tmp_pgs_j += 1
-                
-                if pgs != None:
-                    pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
             else:
                 self.extracted_toc.append([el['title'],1+self.total_pages,\
                                                      lvl,len(el['children'])])
