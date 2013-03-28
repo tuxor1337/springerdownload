@@ -13,12 +13,20 @@ from gettext import gettext as _
 ########################## Standard Output Class  ##############################
 
 class printer:
-    def __init__(self, p=stdout): self.p = p
-    def doing(self,s): self.p.write("==> %s..." % (s)); self.p.flush()
-    def done(self,s="done"): self.p.write(s+".\n"); self.p.flush()
-    def out(self,s): self.p.write(s+"\n"); self.p.flush()
-    def err(self,s): self.p.write("Error: "+s+"\n"); self.p.flush()
+    def __init__(self, p=stdout):
+        self.p = p; self.busy = False
+    def doing(self,s):
+        self.p.write("==> %s..." % (s));
+        self.p.flush(); self.busy = True
+    def done(self,s="done"): self.p.write(s+"."); self.relax(); self.p.flush()
+    def out(self,s):
+        self.relax(); self.p.write(s+"\n"); self.p.flush()
+    def err(self,s):
+        self.relax(); self.p.write("Error: "+s+"\n"); self.p.flush()
     def progress(self,text): return cli_progress(text,self.p)
+    def relax(self):
+        if self.busy: self.p.write("\n")
+        self.busy = False
 
 class cli_progress:
     def __init__(self,text,p=stdout):

@@ -12,7 +12,7 @@ except:
     from urllib.error import URLError
     from http.client import BadStatusLine
     
-import os, re, random, time
+import os, re, random, time, shutil
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from pyPdf import PdfFileWriter, PdfFileReader
@@ -25,34 +25,43 @@ from pdfmark import *
 SPRINGER_URL = "http://link.springer.com"
 SPR_IMG_URL  = "http://images.springer.com"
 
-GS_BIN = IM_BIN = None
+BINPATH = { "gs": None, "pdftk": None, "convert": None}
 for p in reversed(os.getenv("PATH").split(":")):
-    candidate = os.path.join(p,"gs")
-    if os.path.isfile(candidate):
-        GS_BIN = candidate
-    candidate = os.path.join(p,"convert")
-    if os.path.isfile(candidate):
-        IM_BIN = candidate
-        
-if GS_BIN == None or IM_BIN == None:
-    from sys import exit
-    print "Couldn't locate ImageMagick (convert) and Ghostscript (gs) binaries."
-    exit(1)
+    for f in ["gs","convert","pdftk"]:
+        candidate = os.path.join(p,f)
+        if os.path.isfile(candidate):
+            BINPATH[f] = candidate
+
+GS_BIN = BINPATH['gs']
+IM_BIN = BINPATH['convert']
+PDFTK_BIN = BINPATH['pdftk']
+
+options_default = {
+    "cover": True,
+    "autotitle": False,
+    "pause": 0,
+    "blanks": False,
+    "dbpage": False,
+    "pdftk": False,
+    "verbose": False,
+}
 
 ################################################################################
 ################################## Fetcher #####################################
 ################################################################################
    
 class springerFetcher(object):
-    def __init__(self, springer_id, outf, p, cover=True, \
-                 autotitle=False, pause=0, blanks=False, dbpage=False):
-        self.p, self.outf, self.autotitle = p, outf, autotitle
-        self.include_cover, self.pause = cover, pause
-        self.blanks, self.dbpage = blanks,dbpage
+    def __init__(self, springer_id, outf, p, options):
+        self.opts = options
+        for key in options_default:
+            if key not in options:
+                self.opts[key] = options_default[key]
+        self.p, self.outf = p, outf
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
         self.outputPDF = PdfFileWriter(); self.labels = []
-        self.extracted_toc = []; self.total_pages = 0
+        self.total_pages = 0; self.extracted_toc = []
+        self.chPdf = []
         
     def parseSpringerURL(self,url):
         url = url.replace("http://","")
@@ -66,8 +75,8 @@ class springerFetcher(object):
             return None
             
     def pauseBeforeHttpGet(self):
-        if self.pause > 0:	
-            time.sleep((0.6 + random.random()*0.8)*self.pause)
+        if self.opts['pause'] > 0:	
+            time.sleep((0.6 + random.random()*0.8)*self.opts['pause'])
     
     def insertBlankPage(self):
         tmp_blankpdf = NamedTemporaryFile(delete=False,suffix=".pdf")
@@ -82,6 +91,11 @@ class springerFetcher(object):
         self.total_pages += 1
    
     def run(self):
+        if self.opts['verbose']:
+            self.p.out(_("External paths:"))
+            self.p.out("ImageMagick: %s" % IM_BIN)
+            self.p.out("Ghostscript: %s" % GS_BIN)
+            self.p.out("PDF Toolkit: %s" % PDFTK_BIN)
         self.pauseBeforeHttpGet()
         self.soup = getSoup(self.book_url)
         if self.soup == None:
@@ -132,7 +146,7 @@ class springerFetcher(object):
             'year' : get_id("abstract-about-book-chapter-copyright-year")
         }
         if not self.outf:
-            if self.autotitle:
+            if self.opts['autotitle']:
                 self.outf = "%s - %s.pdf" % (", ".join(self.info['authors']),
                                                 self.info['title'])
             else:
@@ -237,6 +251,7 @@ class springerFetcher(object):
             p = Popen(cmd,stdout=PIPE,stderr=PIPE)
             p.communicate(); os.remove(tmp_img.name)
             tmp_cover = PdfFileReader(tmp_pdfimg)
+            self.chPdf.insert(0,tmp_pdfimg)
             self.outputPDF.addPage(tmp_cover.pages[0])
             self.extracted_toc += getTocFromPdf(tmp_cover,self.total_pages,"Cover")
             self.labels += [[0,{"/P":"(Cover)"}],[1,{"/S":"/D"}]]
@@ -269,21 +284,26 @@ class springerFetcher(object):
                 
         def fetchCh(el,lvl):
             if el['pdf_url'] != "":
-                pdf = TemporaryFile()
+                pdf = NamedTemporaryFile(delete=False)
                 self.pauseBeforeHttpGet()
                 webPDF  = urlopen(SPRINGER_URL + el['pdf_url'])
                 pdf.write(webPDF.read())
                 inputPDF = PdfFileReader(pdf)
+                self.chPdf.append(pdf)
                 el['page_cnt'] = 0
                 if self.tmp_pgs_j == 0:
                     tmp_box = inputPDF.pages[0].mediaBox
                     self.info['pagesize'] = (tmp_box[2], tmp_box[3])
-                    if self.include_cover:
-                        self.p.doing(_("Fetching book cover"))
-                        if self.fetchCover():
-                            self.p.done()
+                    if self.opts['cover']:
+                        if IM_BIN == None:
+                            self.p.err(_("Skipping book cover due to"
+                                + " missing ImageMagick binary."))
                         else:
-                            self.p.done(_("not available"))
+                            self.p.doing(_("Fetching book cover"))
+                            if self.fetchCover():
+                                self.p.done()
+                            else:
+                                self.p.done(_("not available"))
                     if pgs != None:
                         pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
                     el['page_cnt'] = 1
@@ -295,8 +315,8 @@ class springerFetcher(object):
                                           self.total_pages,pr)
                 el['page_cnt'] += inputPDF.getNumPages()
                 self.total_pages += inputPDF.getNumPages()
-                if self.blanks:
-                    if self.dbpage:
+                if self.opts['blanks']:
+                    if self.opts['dbpage']:
                         if self.tmp_pgs_j == 0:
                             test_n = (4-((el['page_cnt']-1)%4))%4
                         else: test_n = (4-(el['page_cnt']%4))%4
@@ -320,19 +340,15 @@ class springerFetcher(object):
         self.pdfmarks = infoToPdfmark(self.info)
         self.pdfmarks += tocToPdfmark(self.extracted_toc,repairChars)
         self.pdfmarks += labelsToPdfmark(self.labels)
-      
-    def write(self):
-        self.p.doing(_("Concatenating"))
-        pdf = TemporaryFile()
-        self.outputPDF.write(pdf); pdf.flush(); pdf.seek(0)
+    
+    def gs_parse(self,pdf):
         pdfmark_file = NamedTemporaryFile(delete=False)
         pdfmark_file.write(self.pdfmarks)
-        self.p.done()
         pdfmark_file.flush(); pdfmark_file.seek(0)
         cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
                "-dAutoRotatePages=/None","-sOutputFile="+self.outf,\
                "-",pdfmark_file.name]
-        p = Popen(cmd,stdin=pdf,stdout=PIPE)
+        p = Popen(cmd, stdin=pdf, stdout=PIPE, stderr=PIPE)
         pgs = self.p.progress(_("Writing to file (page %d of %d)"))
         pgs.update(0,self.total_pages)
         for line in iter(p.stdout.readline,""):
@@ -341,5 +357,45 @@ class springerFetcher(object):
         pdfmark_file.close()
         os.remove(pdfmark_file.name)
         pgs.destroy()
-        self.p.out(_("Output written to %s!") % (self.outf))
+        if self.opts['verbose']:
+            self.p.out(_("Ghostscript stderr:"))
+            self.p.out(p.communicate()[1].strip())
+            
+    def pdftk_cat(self,pdf):
+        self.p.doing(_("Concatenating"))
+        cmd = [PDFTK_BIN]
+        cmd.extend([f.name for f in self.chPdf])
+        cmd.extend(["cat","output", pdf.name])
+        Popen(cmd).communicate()
+        self.p.done()
+      
+    def write(self):
+        pdf = NamedTemporaryFile()
+        if self.opts['pdftk'] and PDFTK_BIN != None:
+            self.pdftk_cat(pdf)
+        else:
+            if PDFTK_BIN == None:
+                self.p.err(_("No pdftk binary found. Falling back to"
+                    + " pyPdf.PdfFileWriter"))
+            try:
+                self.p.doing(_("Concatenating"))
+                self.outputPDF.write(pdf)
+                self.p.done()
+            except UnicodeDecodeError, e:
+                self.p.err(_("An unexpected error occurred."))
+                self.p.err(e)
+                if PDFTK_BIN != None:
+                    self.p.out(_("Another attempt using pdftk."))
+                else:
+                    sys.exit(1)
+        pdf.flush(); pdf.seek(0)
+        if GS_BIN != None:
+            self.gs_parse(pdf)
+        else:
+            self.p.err(_("No Ghostscript binary found. Skipping PDF meta info."))
+            self.p.out(_("Copying %s to %s!") % (pdf.name,self.outf))
+            shutil.copy(pdf.name,self.outf)
+        for f in self.chPdf:
+            f.close(); os.unlink(f.name)
+        self.p.out(_("==> Output written to %s!") % (self.outf))
         
