@@ -12,10 +12,34 @@ except:
     from urllib.error import URLError
     from http.client import BadStatusLine
     
+"""
+Prevent problems with pyPdf's string handling (not yet fixed in PyPDF2).
+This might cause performance problems, but otherwise the merge process at the
+end of the script might fail irremediably.
+"""
+
+import pyPdf
+
+def new_createStringObject(string):
+    if isinstance(string, unicode):
+        return pyPdf.generic.TextStringObject(string)
+    elif isinstance(string, str):
+        try:
+            retval = pyPdf.generic.TextStringObject(
+                pyPdf.generic.decode_pdfdocencoding(string)
+            )
+            retval.autodetect_pdfdocencoding = True
+            return retval
+        except UnicodeDecodeError:
+            return pyPdf.generic.ByteStringObject(string)
+    else:
+        raise TypeError("createStringObject should have str or unicode arg")
+
+pyPdf.generic.createStringObject = new_createStringObject
+    
 import os, re, random, time, shutil
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
-from pyPdf import PdfFileWriter, PdfFileReader
 from gettext import gettext as _
 
 from util import *
@@ -59,7 +83,7 @@ class springerFetcher(object):
         self.p, self.outf = p, outf
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
-        self.outputPDF = PdfFileWriter(); self.labels = []
+        self.outputPDF = pyPdf.PdfFileWriter(); self.labels = []
         self.total_pages = 0; self.extracted_toc = []
         self.chPdf = []
         
@@ -86,7 +110,7 @@ class springerFetcher(object):
                "-sOutputFile=%s" % tmp_blankpdf.name]
         p = Popen(cmd, stdin=PIPE, stdout=PIPE)
         p.communicate(input="")
-        tmp_blankp = PdfFileReader(tmp_blankpdf)
+        tmp_blankp = pyPdf.PdfFileReader(tmp_blankpdf)
         self.outputPDF.addPage(tmp_blankp.pages[0])
         self.total_pages += 1
    
@@ -250,7 +274,7 @@ class springerFetcher(object):
                        "-density", "140", tmp_img.name,tmp_pdfimg.name]
             p = Popen(cmd,stdout=PIPE,stderr=PIPE)
             p.communicate(); os.remove(tmp_img.name)
-            tmp_cover = PdfFileReader(tmp_pdfimg)
+            tmp_cover = pyPdf.PdfFileReader(tmp_pdfimg)
             self.chPdf.insert(0,tmp_pdfimg)
             self.outputPDF.addPage(tmp_cover.pages[0])
             self.extracted_toc += getTocFromPdf(tmp_cover,self.total_pages,"Cover")
@@ -288,9 +312,12 @@ class springerFetcher(object):
                 self.pauseBeforeHttpGet()
                 webPDF  = urlopen(SPRINGER_URL + el['pdf_url'])
                 pdf.write(webPDF.read())
-                inputPDF = PdfFileReader(pdf)
                 self.chPdf.append(pdf)
+                
+                inputPDF = pyPdf.PdfFileReader(pdf)
                 el['page_cnt'] = 0
+                
+                # Get page size info and load cover if necessary
                 if self.tmp_pgs_j == 0:
                     tmp_box = inputPDF.pages[0].mediaBox
                     self.info['pagesize'] = (tmp_box[2], tmp_box[3])
@@ -307,14 +334,17 @@ class springerFetcher(object):
                     if pgs != None:
                         pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
                     el['page_cnt'] = 1
+                
+                # Add downloaded pdf to stack
                 [self.outputPDF.addPage(x) for x in inputPDF.pages]
                 self.extracted_toc += getTocFromPdf(inputPDF,self.total_pages,\
                             el['title'],lvl,len(el['children']))
                 pr = el['page_range'][0] if el['page_range'][0] != 0 else -999
-                self.labels += getPagelabelsFromPdf(inputPDF,\
-                                          self.total_pages,pr)
+                self.labels += getPagelabelsFromPdf(inputPDF, self.total_pages,pr)
                 el['page_cnt'] += inputPDF.getNumPages()
                 self.total_pages += inputPDF.getNumPages()
+                
+                # Double and blank pages option
                 if self.opts['blanks']:
                     if self.opts['dbpage']:
                         if self.tmp_pgs_j == 0:
@@ -326,6 +356,7 @@ class springerFetcher(object):
                         for x in range(el['page_cnt'] % 2):
                             self.insertBlankPage()
                 self.tmp_pgs_j += 1
+                
                 if pgs != None:
                     pgs.update(self.tmp_pgs_j,self.info['chapter_cnt'])
             else:
@@ -381,11 +412,14 @@ class springerFetcher(object):
                 self.p.doing(_("Concatenating"))
                 self.outputPDF.write(pdf)
                 self.p.done()
-            except UnicodeDecodeError, e:
+            except:
                 self.p.err(_("An unexpected error occurred."))
                 self.p.err(e)
                 if PDFTK_BIN != None:
+                    """ pdftk is more stable in most cases, but it won't be
+                    available on all systems. """
                     self.p.out(_("Another attempt using pdftk."))
+                    self.pdftk_cat(pdf)
                 else:
                     sys.exit(1)
         pdf.flush(); pdf.seek(0)
