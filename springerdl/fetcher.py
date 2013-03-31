@@ -1,5 +1,4 @@
 
-
 """
 First attempt to implement Python 3 support. There is still a long way to go
 though, mainly because there is no pyPdf (or PyPdf2) for Python 3.
@@ -37,7 +36,7 @@ def new_createStringObject(string):
 
 pyPdf.generic.createStringObject = new_createStringObject
     
-import os, re, random, time, shutil
+import os, re, random, time, shutil, string
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from gettext import gettext as _
@@ -172,10 +171,13 @@ class springerFetcher(object):
         }
         if not self.outf:
             if self.opts['autotitle']:
-                self.outf = "%s - %s.pdf" % (", ".join(self.info['authors']),
+                self.outf = "%s - %s.pdf" % (", ".join(self.info['authors']), \
                                                 self.info['title'])
             else:
                 self.outf = self.info['online_isbn']+".pdf"
+        valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
+        self.outf = "".join(c if c in valid_chars else "_" \
+                    for c in self.outf)
    
 ################################ Fetch TOC #####################################
 
