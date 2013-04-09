@@ -1,5 +1,4 @@
 
-
 """
 First attempt to implement Python 3 support. There is still a long way to go
 though, mainly because there is no pyPdf (or PyPdf2) for Python 3.

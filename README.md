@@ -1,9 +1,8 @@
 Springer Link Downloader
 ========================
 
-Downloader for link.springer.com written in Python using pyPdf, BeautifulSoup,
-ImageMagick and Ghostscript. For more information see 
-http://tovotu.de/dev/518-Neuer-SpringerLink-Downloader/
+Downloader for link.springer.com written in Python using pyPdf and BeautifulSoup.
+For more information see http://tovotu.de/dev/518-Neuer-SpringerLink-Downloader/
 
 Requirements
 ------------
@@ -20,11 +19,12 @@ option. You will need `Gtk3` from the Python API of `gobject` to run the GUI.
 
 Furthermore it makes use of these command line tools:
 
-* ImageMagick (as `/usr/bin/convert`)
-* ghostscript (as `/usr/bin/gs`)
+* ImageMagick (optional: the download of the frontcover is skipped if not available)
+* ghostscript (optional: the metadata is skipped if not available)
+* pdftk (optional: for `--pdftk` option)
 
 Quick start: create a single working executable
-----------------------------------------
+-----------------------------------------------
 
 You can create a working executable in `dist/springer_download` by simply
 running the following command:
@@ -57,6 +57,13 @@ Package maintainers might want to add the `--root` option to specify an
 appropriate `%{buildroot}`. For more information see 
 
     $ python setup.py install --help
+
+Usage
+-----
+
+For detailed usage information please refer to
+
+    $ springer_download.py --help
 
 License
 -------
