@@ -37,7 +37,7 @@ def new_createStringObject(string):
 
 pyPdf.generic.createStringObject = new_createStringObject
     
-import os, re, random, time, shutil
+import os, re, random, time, shutil, string
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from gettext import gettext as _
@@ -172,10 +172,13 @@ class springerFetcher(object):
         }
         if not self.outf:
             if self.opts['autotitle']:
-                self.outf = "%s - %s.pdf" % (", ".join(self.info['authors']),
+                self.outf = "%s - %s.pdf" % (", ".join(self.info['authors']), \
                                                 self.info['title'])
             else:
                 self.outf = self.info['online_isbn']+".pdf"
+        valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
+        self.outf = "".join(c if c in valid_chars else "_" \
+                    for c in self.outf)
    
 ################################ Fetch TOC #####################################
 
@@ -217,7 +220,11 @@ class springerFetcher(object):
                    page_range = [-1000+roman_to_int(x) for x in page_range]
                 page_range = [int(x) for x in page_range]
             except AttributeError:
-                page_range = [0,0]
+                if len(ch_list) > 0:
+                    p = ch_list[-1]['page_range'][1]+1
+                else:
+                    p = 0
+                page_range = [p,p]
             title = title.replace("\n"," ")
             ch_list.append({'children':children,
                 'title':title, 'pdf_url':pdf_url,'noaccess': noaccess,
@@ -259,7 +266,7 @@ class springerFetcher(object):
                 else: parseChItem(chl,li)
             return chl
             
-        return getTocRec(div.ol)
+        return sorted(getTocRec(div.ol), key=lambda el: el['page_range'][0])
       
 ################################## Cover #######################################
 
