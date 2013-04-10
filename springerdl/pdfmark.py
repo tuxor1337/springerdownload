@@ -1,6 +1,7 @@
 
-from util import decodeForSure
 from time import localtime, strftime
+
+from springerdl.util import decodeForSure
    
 ################################################################################
 ############################# meta to pdfmark  #################################

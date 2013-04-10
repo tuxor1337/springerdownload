@@ -41,9 +41,9 @@ from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from gettext import gettext as _
 
-from util import *
-from pdftoc import *
-from pdfmark import *
+from springerdl.util import *
+from springerdl.pdftoc import *
+from springerdl.pdfmark import *
 
 SPRINGER_URL = "http://link.springer.com"
 SPR_IMG_URL  = "http://images.springer.com"
