@@ -36,7 +36,7 @@ def new_createStringObject(string):
 
 pyPdf.generic.createStringObject = new_createStringObject
     
-import os, re, random, time, shutil, string
+import os, re, random, time, shutil, string, sys
 from subprocess import Popen, PIPE
 from tempfile import TemporaryFile, NamedTemporaryFile
 from gettext import gettext as _
@@ -66,7 +66,6 @@ options_default = {
     "pause": 0,
     "blanks": False,
     "dbpage": False,
-    "pdftk": False,
     "verbose": False,
 }
 
@@ -83,9 +82,8 @@ class springerFetcher(object):
         self.p, self.outf = p, outf
         self.key = self.parseSpringerURL(springer_id)
         self.book_url = '%s/book/10.1007/%s' % (SPRINGER_URL,self.key)
-        self.outputPDF = pyPdf.PdfFileWriter(); self.labels = []
+        self.labels = []; self.chPdf = []
         self.total_pages = 0; self.extracted_toc = []
-        self.chPdf = []
         
     def parseSpringerURL(self,url):
         url = url.replace("http://","")
@@ -108,10 +106,8 @@ class springerFetcher(object):
                "-dDEVICEWIDTHPOINTS=%f" % self.info['pagesize'][0],\
                "-dDEVICEHEIGHTPOINTS=%f" % self.info['pagesize'][1],\
                "-sOutputFile=%s" % tmp_blankpdf.name]
-        p = Popen(cmd, stdin=PIPE, stdout=PIPE)
-        p.communicate(input="")
-        tmp_blankp = pyPdf.PdfFileReader(tmp_blankpdf)
-        self.outputPDF.addPage(tmp_blankp.pages[0])
+        Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
+        self.chPdf.append(tmp_blankpdf)
         self.total_pages += 1
    
     def run(self):
@@ -187,14 +183,18 @@ class springerFetcher(object):
             if len(toc2) != 0 and len(toc1) != 0:
                 mergeitem = toc2.pop(0)
                 if toc1[-1]['title'] == mergeitem['title']:
-                   toc1[-1]['children'] = tocMerge(toc1[-1]['children'],
+                    if toc1[-1]['children'][-1]['title'] \
+                        == mergeitem['children'][-1]['title'] \
+                        and "Back Matter" in toc1[-1]['children'][-1]['title']:
+                        toc1[-1]['children'].pop()
+                    toc1[-1]['children'] = tocMerge(toc1[-1]['children'],
                                                        mergeitem['children'])
                 elif mergeitem['page_range'][1] != 0 and \
                    (toc1[-1]['page_range'][0] > mergeitem['page_range'][1] \
                    or toc1[-1]['page_range'][0] == 0):
-                   tmp = toc1[-1]
-                   toc1[-1] = mergeitem
-                   toc1.append(tmp)
+                    tmp = toc1[-1]
+                    toc1[-1] = mergeitem
+                    toc1.append(tmp)
                 else:
                    toc1.append(mergeitem)
             return toc1+toc2
@@ -207,24 +207,47 @@ class springerFetcher(object):
             if i < dl_page_cnt:
                 self.pauseBeforeHttpGet()
                 self.soup = getSoup("%s/page/%d"  % (self.book_url,i+1))
+        
+        self.toc = sorted(self.toc, key=lambda el: el['page_range'][0])
+        
+        # begin: debugging
+        if False:
+            # print table of contents only, don't download any pdfs
+            def printToc(toc,lvl=0):
+                for el in toc:
+                    print "-" * (lvl+1),
+                    print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
+                    print el['title'],
+                    if el['noaccess']:
+                        print " (no access)",
+                    print
+                    if len(el['children']) != 0:
+                        printToc(el['children'],lvl+1)
+            print
+            printToc(self.toc)
+            sys.exit(1)
+        # end: debugging
 
     def tocFromDiv(self,div):
         def append_ch(ch_list,title="", children=[], pdf_url="", \
                   authors=[], page_range="", noaccess=None):
-            m = re.search(r'Pages ([0-9IXVLCDM]+)-([0-9IXVLCDM]+)', 
+            title = title.replace("\n"," ")
+            m = re.search(r'Pages ([0-9A-Z]+)-([0-9A-Z]+)', 
                page_range,re.I)
             try:
                 page_range = [m.group(1),m.group(2)]
                 if not page_range[0].isnumeric():
-                   page_range = [-1000+roman_to_int(x) for x in page_range]
+                    if re.match(r'^[IXVCMLD]+$', page_range[0]):
+                        page_range = [-1000+roman_to_int(x) for x in page_range]
+                    else:
+                        page_range = [0,0]
                 page_range = [int(x) for x in page_range]
             except AttributeError:
-                if len(ch_list) > 0:
+                if len(ch_list) > 0 and ch_list[-1]['page_range'][1] != 0:
                     p = ch_list[-1]['page_range'][1]+1
                 else:
                     p = 0
                 page_range = [p,p]
-            title = title.replace("\n"," ")
             ch_list.append({'children':children,
                 'title':title, 'pdf_url':pdf_url,'noaccess': noaccess,
                 'authors':authors, 'page_range':page_range})
@@ -264,8 +287,8 @@ class springerFetcher(object):
                 if "part-item" in li['class']: parsePartItem(chl,li)
                 else: parseChItem(chl,li)
             return chl
-            
-        return sorted(getTocRec(div.ol), key=lambda el: el['page_range'][0])
+        
+        return getTocRec(div.ol)
       
 ################################## Cover #######################################
 
@@ -281,9 +304,8 @@ class springerFetcher(object):
                        "-density", "140", tmp_img.name,tmp_pdfimg.name]
             p = Popen(cmd,stdout=PIPE,stderr=PIPE)
             p.communicate(); os.remove(tmp_img.name)
-            tmp_cover = pyPdf.PdfFileReader(tmp_pdfimg)
             self.chPdf.insert(0,tmp_pdfimg)
-            self.outputPDF.addPage(tmp_cover.pages[0])
+            tmp_cover = pyPdf.PdfFileReader(tmp_pdfimg)
             self.extracted_toc += getTocFromPdf(tmp_cover,self.total_pages,"Cover")
             self.labels += [[0,{"/P":"(Cover)"}],[1,{"/S":"/D"}]]
             self.total_pages += 1
@@ -352,11 +374,10 @@ class springerFetcher(object):
                     el['page_cnt'] = 1
                 
                 # Add downloaded pdf to stack
-                [self.outputPDF.addPage(x) for x in inputPDF.pages]
                 self.extracted_toc += getTocFromPdf(inputPDF,self.total_pages,\
                             el['title'],lvl,len(el['children']))
                 pr = el['page_range'][0] if el['page_range'][0] != 0 else -999
-                self.labels += getPagelabelsFromPdf(inputPDF, self.total_pages,pr)
+                self.labels += getPagelabelsFromPdf(inputPDF, self.total_pages, pr)
                 el['page_cnt'] += inputPDF.getNumPages()
                 self.total_pages += inputPDF.getNumPages()
                 
@@ -376,6 +397,7 @@ class springerFetcher(object):
                 self.extracted_toc.append([el['title'],1+self.total_pages,\
                                                      lvl,len(el['children'])])
             return el
+            
         iterateRec(accessible_toc,fetchCh)
       
 ############################ Output to file ####################################
@@ -391,7 +413,7 @@ class springerFetcher(object):
         pdfmark_file.flush(); pdfmark_file.seek(0)
         cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
                "-dAutoRotatePages=/None","-sOutputFile="+self.outf,\
-               "-",pdfmark_file.name]
+               "-", pdfmark_file.name]
         p = Popen(cmd, stdin=pdf, stdout=PIPE, stderr=PIPE)
         pgs = self.p.progress(_("Writing to file (page %d of %d)"))
         pgs.update(0,self.total_pages)
@@ -401,9 +423,24 @@ class springerFetcher(object):
         pdfmark_file.close()
         os.remove(pdfmark_file.name)
         pgs.destroy()
+        outp = p.communicate()
         if self.opts['verbose']:
             self.p.out(_("Ghostscript stderr:"))
-            self.p.out(p.communicate()[1].strip())
+            self.p.out(outp[1].strip())
+            
+    def gs_cat(self,pdf):
+        self.p.doing(_("Concatenating"))
+        cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
+               "-dAutoRotatePages=/None","-sOutputFile="+pdf.name]
+        cmd.extend([f.name for f in self.chPdf])
+        p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+        outp = p.communicate()
+        self.p.done()
+        if self.opts['verbose']:
+            self.p.out(_("Ghostscript stdout:"))
+            self.p.out(outp[0].strip())
+            self.p.out(_("Ghostscript stderr:"))
+            self.p.out(outp[1].strip())
             
     def pdftk_cat(self,pdf):
         self.p.doing(_("Concatenating"))
@@ -415,26 +452,13 @@ class springerFetcher(object):
       
     def write(self):
         pdf = NamedTemporaryFile()
-        if self.opts['pdftk'] and PDFTK_BIN != None:
+        if PDFTK_BIN != None:
             self.pdftk_cat(pdf)
+        elif GS_BIN != None:
+            self.gs_cat(pdf)
         else:
-            if PDFTK_BIN == None:
-                self.p.err(_("No pdftk binary found. Falling back to"
-                    + " pyPdf.PdfFileWriter"))
-            try:
-                self.p.doing(_("Concatenating"))
-                self.outputPDF.write(pdf)
-                self.p.done()
-            except:
-                self.p.err(_("An unexpected error occurred."))
-                self.p.err(e)
-                if PDFTK_BIN != None:
-                    """ pdftk is more stable in most cases, but it won't be
-                    available on all systems. """
-                    self.p.out(_("Another attempt using pdftk."))
-                    self.pdftk_cat(pdf)
-                else:
-                    sys.exit(1)
+            self.p.err(_("Need either ghostscript or pdftk for concatenation."))
+            sys.exit(1)
         pdf.flush(); pdf.seek(0)
         if GS_BIN != None:
             self.gs_parse(pdf)

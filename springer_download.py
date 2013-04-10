@@ -40,8 +40,6 @@ def main(argv=sys.argv):
                                 + "pages, such that the resulting PDF can be "\
                                 + "printed in duplex mode with four pages per "\
                                 + "sheet."))
-        parser.add_argument('--pdftk', action="store_true", default=False,
-                        help=_("Use pdftk instead of pyPdf.PdfFileWriter."))
         parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help=_("Verbose output."))
         args = parser.parse_args()
@@ -51,7 +49,6 @@ def main(argv=sys.argv):
             "pause": args.pause,
             "blanks": args.blanks,
             "dbpage": args.double_pages,
-            "pdftk": args.pdftk,
             "verbose": args.verbose,
         }
         fet = springerFetcher(args.springername, args.output, printer(), opts)
