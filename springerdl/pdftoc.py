@@ -1,7 +1,7 @@
 
 import pyPdf
 
-from springerdl.util import decodeForSure
+from .util import decodeForSure
    
 ################################################################################
 ########################## PDF toc and labels  #################################
