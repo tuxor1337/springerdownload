@@ -23,7 +23,18 @@ def new_createStringObject(string):
     if isinstance(string, unicode):
         return pyPdf.generic.TextStringObject(string)
     elif isinstance(string, str):
+        if string.startswith(pyPdf.generic.codecs.BOM_UTF16_BE):
+            try:
+                retval = pyPdf.generic.TextStringObject(string.decode("utf-16"))
+                retval.autodetect_utf16 = True
+                return retval
+            except UnicodeDecodeError:
+                pass
         try:
+            # This is probably a big performance hit here, but we need to
+            # convert string objects into the text/unicode-aware version if
+            # possible... and the only way to check if that's possible is
+            # to try.  Some strings are strings, some are just byte arrays.
             retval = pyPdf.generic.TextStringObject(
                 pyPdf.generic.decode_pdfdocencoding(string)
             )
