@@ -35,6 +35,8 @@ def main(argv=sys.argv):
         parser.add_argument('--blanks', action="store_true", default=False,
                         help=_("Insert blank pages between chapters such that "\
                                 + "each chapter begins at an odd page number."))
+        parser.add_argument('--skip-meta', action="store_true", default=False,
+                        help=_("Skip ghostscripting meta information."))
         parser.add_argument('--double-pages', action="store_true", default=False,
                         help=_("Use only together with --blanks. Inserts blank "\
                                 + "pages, such that the resulting PDF can be "\
@@ -50,6 +52,7 @@ def main(argv=sys.argv):
             "blanks": args.blanks,
             "dbpage": args.double_pages,
             "verbose": args.verbose,
+            "skip-meta": args.skip_meta,
         }
         fet = springerFetcher(args.springername, args.output, printer(), opts)
         fet.run()

@@ -19,7 +19,7 @@ end of the script might fail irremediably.
 
 import pyPdf
 
-def new_createStringObject(string):
+def _new_createStringObject(string):
     if isinstance(string, unicode):
         return pyPdf.generic.TextStringObject(string)
     elif isinstance(string, str):
@@ -45,7 +45,18 @@ def new_createStringObject(string):
     else:
         raise TypeError("createStringObject should have str or unicode arg")
 
-pyPdf.generic.createStringObject = new_createStringObject
+pyPdf.generic.createStringObject = _new_createStringObject
+
+_old_buildOutline = pyPdf.PdfFileReader._buildOutline
+def _new_buildOutline(self, node):
+    try:
+        return _old_buildOutline(self, node)
+    except pyPdf.utils.PdfReadError as e:
+        print
+        print e
+        print
+        return None
+pyPdf.PdfFileReader._buildOutline = _new_buildOutline
     
 import os, re, random, time, shutil, string, sys
 from subprocess import Popen, PIPE
@@ -78,6 +89,7 @@ options_default = {
     "blanks": False,
     "dbpage": False,
     "verbose": False,
+    "skip-meta": False
 }
 
 ################################################################################
@@ -471,11 +483,13 @@ class springerFetcher(object):
             self.p.err(_("Need either ghostscript or pdftk for concatenation."))
             sys.exit(1)
         pdf.flush(); pdf.seek(0)
-        if GS_BIN != None:
+        if GS_BIN != None and self.opts['skip-meta'] == False:
             self.gs_parse(pdf)
         else:
-            self.p.err(_("No Ghostscript binary found. Skipping PDF meta info."))
-            self.p.out(_("Copying %s to %s!") % (pdf.name,self.outf))
+            if GS_BIN == None:
+                self.p.err(_("No Ghostscript binary found."))
+            self.p.out(_("Skipping PDF meta info."))
+            self.p.out(_("Copying %s to %s!") % (pdf.name, self.outf))
             shutil.copy(pdf.name,self.outf)
         for f in self.chPdf:
             f.close(); os.unlink(f.name)
