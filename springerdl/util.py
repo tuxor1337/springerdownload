@@ -2,51 +2,48 @@
 
 import httplib, re, urllib2, copy
 from BeautifulSoup import BeautifulSoup
-from math import floor
-from sys import stdout
-from gettext import gettext as _
 
-################################################################################
-############################### Utilities, Tools  ##############################
-################################################################################
+################################## TOC Helpers #################################
 
-########################## Standard Output Class  ##############################
-
-class printer:
-    def __init__(self, p=stdout):
-        self.p = p; self.busy = False
-    def doing(self,s):
-        self.relax(); self.p.write("==> %s..." % (s));
-        self.p.flush(); self.busy = True
-    def done(self,s="done"): self.p.write(s+"."); self.relax(); self.p.flush()
-    def out(self,s):
-        self.relax(); self.p.write(s+"\n"); self.p.flush()
-    def err(self,s):
-        self.relax(); self.p.write("Error: "+s+"\n"); self.p.flush()
-    def progress(self,text): self.busy = True; return cli_progress(text,self.p)
-    def relax(self):
-        if self.busy: self.p.write("\n")
-        self.busy = False
-
-class cli_progress:
-    def __init__(self,text,p=stdout):
-        self.txt, self.b, self.p = "==> "+text+"...", 0, p
+def printToc(t,lvl=0):
+    for el in t:
+        print "-" * (lvl+1),
+        print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
+        print el['title'],
+        if el['noaccess']:
+            print " (no access)",
+        print
+        if len(el['children']) != 0:
+            printToc(el['children'],lvl+1)
+      
+def tocIterateRec(toc, func, data=None, lvl=0):
+    for el in toc:
+        func(el,lvl,data)
+        if len(el['children']) != 0:
+            tocIterateRec(el['children'],func,data,lvl+1)
+            
+def getAccessibleToc(toc):
+    new_t = []
+    for ch in toc:
+        if not ch['noaccess']:
+            new_ch = copy.deepcopy(ch)
+            new_ch['children'] = getAccessibleToc(new_ch['children'])
+            if ch['pdf_url'] != "" or len(new_ch['children']) != 0:
+                new_t.append(new_ch)
+    return new_t
     
-    def set_text(self,txt):
-        self.txt = "==> "+txt+"..."
-    
-    def update(self,a,b,c="\r"):
-        self.b = b; a = b if a > b else a
-        if b == 0: a = b = 1
-        text = self.txt % (a,b); width = 70-len(text)
-        marks = floor(width * (float(a)/float(b)))
-        loader = '[' + ('=' * int(marks)) + (' ' * int(width - marks)) + ']'
-        self.p.write("%s %s%s" % (text,loader,c)), self.p.flush()
-         
-    def destroy(self):
-        if self.b != 0: self.update(self.b,self.b," Done! \n")
-
 ################################## Little Helpers ##############################
+        
+def parseSpringerURL(url):
+    url = url.replace("http://","")
+    url = url.replace("link.springer.com/","")
+    if "/" not in url:
+        return url
+    m = re.search(r'(book|referencework)/([^/]*)/([^/]*)', url)
+    try:
+        return m.group(3)
+    except:
+        return None
 
 numeral_map = zip(
     (1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1),
@@ -103,7 +100,7 @@ def getSoup(url,params=None,charset='utf8'):
         soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
                 markupMassage=hexentityMassage)
     except (urllib2.URLError,httplib.BadStatusLine):
-        print _("Connection to %s failed.") % url
+        print "Connection to %s failed." % url
         return None
     return soup
 

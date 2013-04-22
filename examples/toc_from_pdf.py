@@ -62,6 +62,14 @@ def convertTocAtoB(tA,lt):
         ch['children'] = convertTocAtoB(tA[i+1:],j-i-1)
         i = j; tB.append(ch)
     return tB
+
+def printToc(toc,lvl=0):
+    for el in toc:
+        print "-" * (lvl+1),
+        print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
+        print el['title']
+        if len(el['children']) != 0:
+            printToc(el['children'],lvl+1)
    
 converted_toc =  convertTocAtoB(toc,len(toc))
 
@@ -73,12 +81,7 @@ elif args.pdfmark:
     print tocToPdfmark(toc)
     print labelsToPdfmark(getPagelabelsFromPdf(pdf))
 else:
-    def printToc(toc,lvl=0):
-        for el in toc:
-            print "-" * (lvl+1),
-            print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
-            print el['title']
-            if len(el['children']) != 0:
-                printToc(el['children'],lvl+1)
+    print toc
+    print converted_toc
     printToc(converted_toc)
    
