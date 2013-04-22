@@ -1,67 +1,94 @@
 #!/usr/bin/env python
 
-import sys
+import sys, string
+from gettext import gettext as _
 
-################################################################################
-################################## Main program ################################
-################################################################################
+from springerdl import meta, util, download, merge
+from springerdl.pyPdf_ext import PdfFileReader_ext as PdfFileReader
+from springerdl.const import *
 
 def main(argv=sys.argv):
     from os import isatty
-    from springerdl.fetcher import springerFetcher
-   
     if (isatty(0) or len(argv) > 1) and "--gui" not in  argv[1:]:
-        from argparse import ArgumentParser
-        from springerdl.util import printer
-        from gettext import gettext as _
-        
-        parser = ArgumentParser(description = _('Fetch whole books from'
-                                            + ' link.springer.com.'))
-        parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
-                        type=str, help = _('A string identifying the book, '
-                                       + 'e.g. its URL or Online-ISBN.'))
-        parser.add_argument('-o','--output', metavar='FILE', type=str, 
-                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))  
-        parser.add_argument('--no-cover', action="store_true", default=False,
-                        help=_("Don't add front cover as first page."))
-        parser.add_argument('--autotitle', action="store_true", default=False,
-                        help=_("Save as AUTHORS - TITLE.pdf. Overwritten by -o option."))
-        parser.add_argument('--gui', action="store_true", default=False,
-                        help=_("Start the interactive GUI not interpreting the "\
-                                + "rest of the command line."))
-        parser.add_argument('--pause', metavar='T', type=int, default=0,
-                        help=_("Add a pause of between 0.6*T and 1.4*T seconds "\
-                                + "before each download to simulate human behaviour."))
-        parser.add_argument('--blanks', action="store_true", default=False,
-                        help=_("Insert blank pages between chapters such that "\
-                                + "each chapter begins at an odd page number."))
-        parser.add_argument('--skip-meta', action="store_true", default=False,
-                        help=_("Skip ghostscripting meta information."))
-        parser.add_argument('--double-pages', action="store_true", default=False,
-                        help=_("Use only together with --blanks. Inserts blank "\
-                                + "pages, such that the resulting PDF can be "\
-                                + "printed in duplex mode with four pages per "\
-                                + "sheet."))
-        parser.add_argument('-v', '--verbose', action="store_true", default=False,
-                        help=_("Verbose output."))
-        args = parser.parse_args()
-        opts =  {
-            "cover": not args.no_cover,
-            "autotitle": args.autotitle,
-            "pause": args.pause,
-            "blanks": args.blanks,
-            "dbpage": args.double_pages,
-            "verbose": args.verbose,
-            "skip-meta": args.skip_meta,
-        }
-        fet = springerFetcher(args.springername, args.output, printer(), opts)
-        fet.run()
+        from springerdl.interface.cli import cli_main
+        interface = cli_main
     else:
-        from springerdl.gui import gui_main
-        gui_main(springerFetcher)
-      
+        from springerdl.interface.gui import gui_main
+        interface = gui_main
+        
+    interface(springer_fetch)
     return 0
-
+    
+def springer_fetch(interface):
+    springer_key = util.parseSpringerURL(interface.option("springer_name"))
+    book_url = '%s/book/10.1007/%s' % (SPRINGER_URL, springer_key)
+    if interface.option('verbose'):
+        print "ImageMagick: %s" % IM_BIN
+        print "Ghostscript: %s" % GS_BIN
+        print "PDF Toolkit: %s" % PDFTK_BIN
+        
+    interface.doing(_("Fetching book info"))
+    soup = util.getSoup(book_url)
+    if soup == None:
+        interface.err(_("The specified identifier doesn't point to an existing Springer book resource"))
+        return False
+    info = meta.fetchBookInfo(soup)
+    interface.done()
+    
+    interface.out(", ".join(info['authors']))
+    bookinfo = info['title']
+    if info['subtitle'] != None:
+        bookinfo += ": %s" % (info['subtitle'])
+    bookinfo += " (%d chapters)" % (info['chapter_cnt'])
+    interface.out(bookinfo)
+    
+    interface.doing(_("Fetching chapter data"))
+    toc = meta.fetchToc(soup, book_url)
+    if interface.option('sorted'):
+        toc = sorted(toc, key=lambda el: el['page_range'][0])
+    accessible_toc = util.getAccessibleToc(toc)
+    interface.done()
+    
+    if interface.option('verbose'): util.printToc(accessible_toc)
+    
+    download.pdf_files(accessible_toc, interface.progress(""), \
+        interface.option('pause'), info['chapter_cnt'])
+        
+    inputPDF = PdfFileReader(accessible_toc[0]['pdf_file'])
+    tmp_box = inputPDF.pages[0].mediaBox
+    info['pagesize'] = (tmp_box[2], tmp_box[3])
+    if interface.option('cover'):
+        if IM_BIN == None:
+            interface.err(_("Skipping cover due to missing ImageMagick binary."))
+        else:
+            interface.doing(_("Fetching book cover"))
+            cover = meta.fetchCover(info['print_isbn'], \
+                info['pagesize'])
+            if cover:
+                accessible_toc.insert(0,{
+                    'pdf_file': cover,
+                    'children': [],
+                    'page_range': [0,0],
+                    'title': "Cover",
+                })
+                interface.done()
+            else:
+                interface.done(_("not available"))
+    
+    outf = interface.option('output-file')
+    if outf == None:
+        if interface.option('autotitle'):
+            outf = "%s - %s.pdf" % (", ".join(info['authors']), \
+                                            info['title'])
+        else:
+            outf = info['online_isbn']+".pdf"
+    valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
+    outf = "".join(c if c in valid_chars else "_" for c in outf)
+    
+    merge.merge_by_toc(accessible_toc, info, outf, interface)
+    
+    return True
+    
 if __name__ == "__main__":
     sys.exit(main())
       
