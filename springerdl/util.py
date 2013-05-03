@@ -3,6 +3,8 @@
 import httplib, re, urllib2, copy
 from BeautifulSoup import BeautifulSoup
 
+from const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
+
 ################################## TOC Helpers #################################
 
 def printToc(t,lvl=0):
@@ -91,18 +93,60 @@ def decodeForSure(s):
 
 ################################## Soup helpers ################################
 
-def getSoup(url,params=None,charset='utf8'):
+def setupOpener(proxy,useragent):
+    if proxy:
+        url = proxy["url"]
+        
+        if url:
+            proxy_handler = urllib2.ProxyHandler({'http': url})
+            
+            username = proxy["username"]
+            password = proxy["password"]
+            realm = proxy["realm"]
+            if username and password and realm:
+                auth_handlers = [urllib2.ProxyBasicAuthHandler(), urllib2.ProxyDigestAuthHandler()]
+                
+                for auth_handler in auth_handlers:
+                    auth_handler.add_password(realm, SPRINGER_URL, username, password)
+                    auth_handler.add_password(realm, SPR_IMG_URL, username, password)
+                
+                opener = urllib2.build_opener(proxy_handler, *auth_handlers)
+            else:
+                opener = urllib2.build_opener(proxy_handler)
+            
+            urllib2.install_opener(opener)
+    
+    if useragent:
+        global USER_AGENT
+        USER_AGENT = useragent
+
+def connect(url,params=None):
+    request = urllib2.Request(url, params);
+    request.add_header('User-Agent', USER_AGENT);
+     
+    return urllib2.urlopen(request)
+    
+def getSoup(url,params=None):#,charset='utf8'):
     hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
     hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
                             lambda m: '&#%d;' % int(m.group(1), 16))]
+    
     try:
-        html = urllib2.urlopen(url,params).read().decode(charset)
-        soup = BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,
-                markupMassage=hexentityMassage)
-    except (urllib2.URLError,httplib.BadStatusLine):
-        print "Connection to %s failed." % url
-        return None
-    return soup
+        response = connect(url, params)
+        if not response:
+            return None
+    
+        html = response.read()#.decode(charset) # urllib2 will automatically convert to correct charset.
+    
+    except urllib2.URLError, e:
+        print _("Connection to %s failed (%s).") % (url, e.reason)
+        return None;
+        
+    except httplib.BadStatusLine, e:
+        print _("Connection to %s failed.") % (url)
+        return None;
+    
+    return BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,markupMassage=hexentityMassage)
 
 def cleanSoup(soup):
     return u''.join(soup.findAll(text=True))

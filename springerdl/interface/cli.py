@@ -38,7 +38,26 @@ class cli_main(object):
                                 + "sheet."))
         parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help=_("Verbose stdout."))
+        parser.add_argument("--proxy-url", nargs='?', const=None, default=None, 
+                            type=str, help=_("Set proxy address"))
+        parser.add_argument("--proxy-username", nargs='?', const=None, default=None, 
+                            type=str, help=_("Set username to authenticate with at proxy"))
+        parser.add_argument("--proxy-password", nargs='?', const=None, default=None, 
+                            type=str, help=_("Set password to authenticate with at proxy"))
+        parser.add_argument("--proxy-realm", nargs='?', const=None, default=None, 
+                            type=str, help=_("Set authentication realm"))
+        parser.add_argument("--user-agent", nargs='?', const=None, default=None, 
+                            type=str, help=_("Set custom user agent"))
+        
         args = parser.parse_args()
+        
+        proxy = {
+            "url" : args.proxy_url,
+            "realm" : args.proxy_realm,
+            "username" : args.proxy_username,
+            "password" : args.proxy_password,
+        }
+        
         self.options =  {
             "springer_name": args.springername,
             "cover": not args.no_cover,
@@ -50,6 +69,8 @@ class cli_main(object):
             "skip-meta": args.skip_meta,
             "sorted": args.sorted,
             "output-file": args.output, 
+            "proxy" : proxy,
+            "user-agent" : args.user_agent,
         }
         self.busy = False
         fetcher(self)
