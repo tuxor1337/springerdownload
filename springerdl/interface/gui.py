@@ -71,6 +71,8 @@ class gui_main(Gtk.Window):
             "output-file": self.outf,
             "cover": self.cover.get_active(),
             "springer_name": self.spr_id.get_text(),
+            "proxy" : None,
+            "user-agent" : None,
         }
         self.pgs.set_fraction(0)
         self.processing = True

@@ -20,6 +20,8 @@ def main(argv=sys.argv):
     return 0
     
 def springer_fetch(interface):
+    util.setupOpener(interface.option("proxy"), interface.option("user-agent"))
+    
     springer_key = util.parseSpringerURL(interface.option("springer_name"))
     book_url = '%s/book/10.1007/%s' % (SPRINGER_URL, springer_key)
     if interface.option('verbose'):
