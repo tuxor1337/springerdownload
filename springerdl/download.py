@@ -3,8 +3,6 @@ import time, random
 from tempfile import NamedTemporaryFile
 from gettext import gettext as _
 
-from util import connect
-
 from . import util
 from .const import * 
 
@@ -27,7 +25,7 @@ def _fetchChPdf(url, pgs, pause):
     if url != "":
         pdf = NamedTemporaryFile(delete=False)
         _pauseBeforeHttpGet(pause)
-        webPDF  = connect(SPRINGER_URL + url)
+        webPDF  = util.connect(SPRINGER_URL + url)
         file_size = int(webPDF.info().getheader('Content-Length').strip())
         downloaded_size = 0
         while 1:
