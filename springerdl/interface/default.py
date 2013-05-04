@@ -12,6 +12,8 @@ class default_main(object):
             "skip-meta": False,
             "sorted": False,
             "output-file": None,
+            "proxy" : None,
+            "user-agent" : USER_AGENT,
         }
         
     def option(self, key):

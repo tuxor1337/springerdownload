@@ -1,7 +1,7 @@
 
 import re, os
 
-from urllib2 import urlopen, URLError
+from urllib2 import URLError
 from httplib import BadStatusLine
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
@@ -128,7 +128,7 @@ def _tocFromDiv(div):
 
 def fetchCover(isbn,size):
     try:
-        webImg = urlopen("%s/covers/%s.tif" \
+        webImg = util.connect("%s/covers/%s.tif" \
                        % (SPR_IMG_URL,isbn))
         tmp_img    = NamedTemporaryFile(delete=False,suffix=".tif")
         tmp_pdfimg = NamedTemporaryFile(delete=False,suffix=".pdf")
