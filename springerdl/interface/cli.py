@@ -39,23 +39,23 @@ class cli_main(object):
         parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help=_("Verbose stdout."))
         parser.add_argument("--proxy-url", nargs='?', const=None, default=None, 
-                            type=str, help=_("Set proxy address"))
+                            type=str, help=_("Set proxy address [default: %(default)s]"))
         parser.add_argument("--proxy-username", nargs='?', const=None, default=None, 
-                            type=str, help=_("Set username to authenticate with at proxy"))
+                            type=str, help=_("Set username to authenticate with at proxy [default: %(default)s]"))
         parser.add_argument("--proxy-password", nargs='?', const=None, default=None, 
-                            type=str, help=_("Set password to authenticate with at proxy"))
-        parser.add_argument("--proxy-realm", nargs='?', const=None, default=None, 
-                            type=str, help=_("Set authentication realm"))
+                            type=str, help=_("Set password to authenticate with at proxy [default: %(default)s]"))
+        parser.add_argument("--proxy-port", nargs='?', const=80, default=80, 
+                            type=int, help=_("Set proxy port [default: %(default)s]"))
         parser.add_argument("--user-agent", nargs='?', const=None, default=None, 
-                            type=str, help=_("Set custom user agent"))
+                            type=str, help=_("Set custom user agent [default: %(default)s]"))
         
         args = parser.parse_args()
         
         proxy = {
             "url" : args.proxy_url,
-            "realm" : args.proxy_realm,
             "username" : args.proxy_username,
             "password" : args.proxy_password,
+            "port" : args.proxy_port
         }
         
         self.options =  {
