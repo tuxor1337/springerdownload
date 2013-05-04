@@ -96,19 +96,24 @@ def decodeForSure(s):
 def setupOpener(proxy,useragent):
     if proxy:
         url = proxy["url"]
-        
+        port = proxy["port"]
         if url:
-            proxy_handler = urllib2.ProxyHandler({'http': url})
+            
+            proxy_handler = None
+            if not port:
+                proxy_handler = urllib2.ProxyHandler({'http': url})
+            else:
+                proxy_handler = urllib2.ProxyHandler({'http': "%s:%d" % (url, port)})
             
             username = proxy["username"]
             password = proxy["password"]
-            realm = proxy["realm"]
-            if username and password and realm:
-                auth_handlers = [urllib2.ProxyBasicAuthHandler(), urllib2.ProxyDigestAuthHandler()]
+            if username and password:
+                password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
                 
-                for auth_handler in auth_handlers:
-                    auth_handler.add_password(realm, SPRINGER_URL, username, password)
-                    auth_handler.add_password(realm, SPR_IMG_URL, username, password)
+                password_mgr.add_password(None, SPRINGER_URL, username, password)
+                password_mgr.add_password(None, SPR_IMG_URL, username, password)
+                
+                auth_handlers = [urllib2.ProxyBasicAuthHandler(password_mgr), urllib2.ProxyDigestAuthHandler(password_mgr)]
                 
                 opener = urllib2.build_opener(proxy_handler, *auth_handlers)
             else:
