@@ -25,10 +25,10 @@ def merge_by_toc(toc, info, outf, interface):
     elif GS_BIN != None:
         o = gs_cat(data['files'], cat_pdf, interface)
         if interface.option('verbose'):
-            printer.out(_("Ghostscript stdout:"))
-            printer.out(o[0])
-            printer.out(_("Ghostscript stderr:"))
-            printer.out(o[1])
+            interface.out(_("Ghostscript stdout:"))
+            interface.out(o[0])
+            interface.out(_("Ghostscript stderr:"))
+            interface.out(o[1])
     else:
         interface.err(_("Need either ghostscript or pdftk for concatenation."))
         sys.exit(1)
@@ -38,7 +38,10 @@ def merge_by_toc(toc, info, outf, interface):
         pdfmarks = pdfmark.infoToPdfmark(info)
         pdfmarks += pdfmark.tocToPdfmark(data['extracted_toc'],util.repairChars)
         pdfmarks += pdfmark.labelsToPdfmark(data['labels'])
-        gs_meta(cat_pdf, pdfmarks, outf, interface, data['total_pages'])
+        o = gs_meta(cat_pdf, pdfmarks, outf, interface, data['total_pages'])
+        if interface.option('verbose'):
+            interface.out(_("Ghostscript stderr:"))
+            interface.out(o)
     else:
         if GS_BIN == None:
             interface.err(_("No Ghostscript binary found."))
@@ -112,8 +115,8 @@ def gs_meta(pdf, pdfmarks, outf, interface, page_cnt):
     pdfmark_file.flush(); pdfmark_file.seek(0)
     cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
            "-dAutoRotatePages=/None","-sOutputFile="+outf,\
-           "-", pdfmark_file.name]
-    p = Popen(cmd, stdin=pdf, stdout=PIPE, stderr=PIPE)
+           pdf.name, pdfmark_file.name]
+    p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     pgs = interface.progress(_("Writing to file (page %d of %d)"))
     pgs.update(0,page_cnt)
     for line in iter(p.stdout.readline,""):
