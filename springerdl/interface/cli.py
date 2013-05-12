@@ -76,7 +76,14 @@ class cli_main(object):
         fetcher(self)
         
     def option(self, key):
-        return self.options[key]
+        if key == "force-full-access":
+            a = ""
+            while a not in ["y","n"]:
+                a = raw_input(_("You don't have access to this book from your"
+                    + " current location. Proceed anyway? [y,N] ")).lower()
+            return a == "y"
+        else:
+            return self.options[key]
         
     def doing(self,s):
         self.relax(); stdout.write("==> %s..." % (s));

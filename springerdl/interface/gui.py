@@ -73,6 +73,7 @@ class gui_main(Gtk.Window):
             "springer_name": self.spr_id.get_text(),
             "proxy" : None,
             "user-agent" : None,
+            "force-full-access": False,
         }
         self.pgs.set_fraction(0)
         self.processing = True

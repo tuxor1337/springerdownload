@@ -30,11 +30,11 @@ def springer_fetch(interface):
         print "PDF Toolkit: %s" % PDFTK_BIN
         
     interface.doing(_("Fetching book info"))
-    soup = util.getSoup(book_url)
-    if soup == None:
+    root = util.getElementTree(book_url)
+    if root == None:
         interface.err(_("The specified identifier doesn't point to an existing Springer book resource"))
         return False
-    info = meta.fetchBookInfo(soup)
+    info = meta.fetchBookInfo(root)
     interface.done()
     
     interface.out(", ".join(info['authors']))
@@ -43,9 +43,11 @@ def springer_fetch(interface):
         bookinfo += ": %s" % (info['subtitle'])
     bookinfo += " (%d chapters)" % (info['chapter_cnt'])
     interface.out(bookinfo)
+    if info['noaccess'] and not interface.option('force-full-access'):
+        sys.exit()
     
     interface.doing(_("Fetching chapter data"))
-    toc = meta.fetchToc(soup, book_url)
+    toc = meta.fetchToc(root, book_url)
     if interface.option('sorted'):
         toc = sorted(toc, key=lambda el: el['page_range'][0])
     accessible_toc = util.getAccessibleToc(toc)

@@ -9,32 +9,32 @@ from subprocess import Popen, PIPE
 from . import util
 from .const import *
 
-def fetchBookInfo(soup):
+def fetchBookInfo(root):
     info = []
-    author_list = soup.find("div", {"class" : "summary"})\
-                    .findAll("li", {"itemprop":"author"})
+    noaccess = len(root.cssselect("span.icon-unlock"))
+    author_list = root.cssselect("div.summary li[itemprop=author]")
     if len(author_list) == 0:
-        author_list = soup.find("div", {"class" : "summary"})\
-                    .findAll("li", {"itemprop":"editor"})
-    chapter_cnt = soup.find("span", {"class" : "chapter-count" })
-    m = re.search(r'\(([0-9\.]+) chapters\)', util.cleanSoup(chapter_cnt))
+        author_list = root.cssselect("div.summary li[itemprop=editor]")
+    chapter_cnt = root.cssselect("span.chapter-count")[0].text_content()
+    m = re.search(r'\(([0-9\.]+) chapters\)', chapter_cnt.strip())
     def get_id(x):
-        el = soup.find(attrs={"id" : x})
-        return util.cleanSoup(el) if el != None else None
+        el = root.cssselect("#%s" % x)
+        return el[0].text_content() if len(el) != 0 else None
     info = {
-        'authors' : [x.a.string for x in author_list],
+        'authors' : [x.find("a").text_content() for x in author_list],
         'chapter_cnt' : int(m.group(1)),
         'title' : get_id("abstract-about-title"),
         'subtitle' : get_id("abstract-about-book-subtitle"),
         'print_isbn' : get_id("abstract-about-book-print-isbn"),
         'online_isbn' : get_id("abstract-about-book-online-isbn"),
         'publisher' : get_id("abstract-about-publisher"),
-        'year' : get_id("abstract-about-book-chapter-copyright-year")
+        'year' : get_id("abstract-about-book-chapter-copyright-year"),
+        'noaccess' : bool(noaccess),
     }
                 
     return info
 
-def fetchToc(soup, book_url):
+def fetchToc(root, book_url):
     toc = []
     def tocMerge(toc1,toc2):
         if len(toc2) != 0 and len(toc1) != 0:
@@ -56,12 +56,12 @@ def fetchToc(soup, book_url):
                toc1.append(mergeitem)
         return toc1+toc2
 
-    tmp_dpc = soup.find("span", {"class" : "number-of-pages" })
-    dl_page_cnt = int(tmp_dpc.string) if tmp_dpc != None else 1
+    tmp_dpc = root.cssselect("span.number-of-pages")
+    dl_page_cnt = int(tmp_dpc[0].text_content()) if len(tmp_dpc) != 0 else 1
     for i in range(1,dl_page_cnt+1):
-        toc = tocMerge(toc,_tocFromDiv(soup.find("div", {"class" : "toc"})))
+        toc = tocMerge(toc,_tocFromDiv(root.cssselect("div.toc")[0]))
         if i < dl_page_cnt:
-            soup = util.getSoup("%s/page/%d"  % (book_url,i+1))
+            root = util.getElementTree("%s/page/%d"  % (book_url,i+1))
     return toc
 
 def _tocFromDiv(div):
@@ -72,7 +72,7 @@ def _tocFromDiv(div):
            page_range,re.I)
         try:
             page_range = [m.group(1),m.group(2)]
-            if not page_range[0].isnumeric():
+            if not page_range[0].isdigit():
                 if re.match(r'^[IXVCMLD]+$', page_range[0]):
                     page_range = [-1000+util.roman_to_int(x) for x in page_range]
                 else:
@@ -84,47 +84,48 @@ def _tocFromDiv(div):
             else:
                 p = 0
             page_range = [p,p]
-        ch_list.append({'children':children,
-            'title':title, 'pdf_url':pdf_url,'noaccess': noaccess,
-            'authors':authors, 'page_range':page_range})
+        ch = {
+            'children' : children,
+            'title' : title,
+            'pdf_url' : pdf_url,
+            'noaccess' : noaccess,
+            'authors' : authors,
+            'page_range' : page_range,
+        }
+        ch_list.append(ch)
   
     def parsePartItem(chl,li):
-        for subh3,subol in zip(li("h3",recursive=False), \
-                               li("ol",recursive=False)):
+        for subh3,subol in zip(li.findall("h3"), li.findall("ol")):
             pdf_url = page_range = ""
-            fr_matt = subol("li",recursive=False, \
-                attrs={"class":re.compile(r'\bfront-matter-item\b')})
+            fr_matt = subol.cssselect("li.front-matter-item")
             if len(fr_matt) != 0:
-               fr_matt = fr_matt[0].extract()
-               pdf_url = fr_matt("a")[0]["href"]
-               page_range = util.cleanSoup(fr_matt.find("p",\
-                                             {"class" : "page-range" }))
-            append_ch(chl, util.cleanSoup(subh3).strip(), \
-                getTocRec(subol), pdf_url, [],page_range)
+                page_range = fr_matt[0].cssselect("p.page-range")[0].text_content()
+                if fr_matt[0].find("a"):
+                    pdf_url = fr_matt[0].find("a").attrib["href"]
+            append_ch(chl, subh3.text_content().strip(), \
+                getTocRec(subol), pdf_url, [], page_range)
               
     def parseChItem(chl,li):
-        try: title = util.cleanSoup(li.h3)
+        try: title = li.find("h3").text_content()
         except:
-            title = util.cleanSoup(li("p", recursive=False, \
-               attrs={"class":re.compile(r'\btitle\b')})[0]).strip()
+            title = li.cssselect("p.title")[0].text_content().strip()
         try: 
-            link = li.find("span",{"class":"action"}).a
-            pdf_url = link["href"] if "Download PDF" in util.cleanSoup(link) else ""
+            link = li.cssselect("span.action a")[0]
+            pdf_url = link.attrib["href"] if "Download PDF" in link.text_content() else ""
         except: pdf_url = ""
         append_ch(chl, title, [], pdf_url, \
-            [util.cleanSoup(x.a).strip() \
-                for x in li("li", {"itemprop" : "author"})], \
-            util.cleanSoup(li.find("p", {"class" : "page-range" })), \
-            "no-access" in li['class'])
+            [x.find("a").text_content().strip() \
+                for x in li.cssselect("li[itemprop=author]")], \
+            li.cssselect("p.page-range")[0].text_content(), "no-access" in li.attrib['class'])
      
     def getTocRec(ol):
         chl = []
-        for li in ol("li",recursive=False):
-            if "part-item" in li['class']: parsePartItem(chl,li)
+        for li in ol.findall("li"):
+            if "part-item" in li.attrib['class']: parsePartItem(chl,li)
             else: parseChItem(chl,li)
         return chl
     
-    return getTocRec(div.ol)
+    return getTocRec(div.find("ol"))
 
 def fetchCover(isbn,size):
     try:

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import httplib, re, urllib2, copy
-from BeautifulSoup import BeautifulSoup
+import httplib, re, urllib2, copy, lxml.html
 
 from const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
 
@@ -131,17 +130,13 @@ def connect(url,params=None):
      
     return urllib2.urlopen(request)
     
-def getSoup(url,params=None):#,charset='utf8'):
-    hexentityMassage = copy.copy(BeautifulSoup.MARKUP_MASSAGE)
-    hexentityMassage += [(re.compile('&#x([0-9a-fA-F]+);'), 
-                            lambda m: '&#%d;' % int(m.group(1), 16))]
-    
+def getElementTree(url,params=None):
     try:
         response = connect(url, params)
         if not response:
             return None
     
-        html = response.read()#.decode(charset) # urllib2 will automatically convert to correct charset.
+        html = response.read()
     
     except urllib2.URLError, e:
         print _("Connection to %s failed (%s).") % (url, e.reason)
@@ -151,8 +146,5 @@ def getSoup(url,params=None):#,charset='utf8'):
         print _("Connection to %s failed.") % (url)
         return None;
     
-    return BeautifulSoup(html,convertEntities=BeautifulSoup.HTML_ENTITIES,markupMassage=hexentityMassage)
-
-def cleanSoup(soup):
-    return u''.join(soup.findAll(text=True))
+    return lxml.html.fromstring(html)
    
