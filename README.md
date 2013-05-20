@@ -9,9 +9,8 @@ Requirements
 
 Springer Link Downloader depends on the following Python packages:
 
-* urllib2, httplib (should be included by default with most distributions)
+* urllib2, httplib, lxml (should be included by default with most distributions)
 * pyPdf
-* BeautifulSoup
 
 It's totally possible running Springer Link Downloader in the command
 line. But if you prefer a graphical user interface, run it with `--gui`
