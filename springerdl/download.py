@@ -6,8 +6,11 @@ from gettext import gettext as _
 from . import util
 from .const import * 
 
-def pdf_files(toc, pgs, pause, cnt):
-    data = [pgs,pause,1,cnt]
+def pdf_files(toc, pgs, pause):
+    data = [pgs,pause,1,0]
+    def count_pdfs(el, _, d):
+        d[3] += int(el['pdf_url'] != "")
+    util.tocIterateRec(toc, count_pdfs, data)
     util.tocIterateRec(toc, lambda x,y,z: _fetchCh(x,z), data)
     pgs.destroy()
 

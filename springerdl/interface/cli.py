@@ -48,6 +48,8 @@ class cli_main(object):
                             type=int, help=_("Set proxy port [default: %(default)s]"))
         parser.add_argument("--user-agent", nargs='?', const=None, default=None, 
                             type=str, help=_("Set custom user agent [default: %(default)s]"))
+        parser.add_argument("--download-only", action="store_true", default=False, 
+                            help=_("Save downloaded PDFs in current directory, don't merge."))
         
         args = parser.parse_args()
         
@@ -71,6 +73,7 @@ class cli_main(object):
             "output-file": args.output, 
             "proxy" : proxy,
             "user-agent" : args.user_agent,
+            "download-only" : args.download_only,
         }
         self.busy = False
         fetcher(self)
@@ -81,6 +84,7 @@ class cli_main(object):
             while a not in ["y","n"]:
                 a = raw_input(_("You don't have access to this book from your"
                     + " current location. Proceed anyway? [y,N] ")).lower()
+                if a == "": a = "n"
             return a == "y"
         else:
             return self.options[key]

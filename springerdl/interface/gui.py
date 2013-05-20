@@ -74,6 +74,7 @@ class gui_main(Gtk.Window):
             "proxy" : None,
             "user-agent" : None,
             "force-full-access": False,
+            "download-only": False,
         }
         self.pgs.set_fraction(0)
         self.processing = True
