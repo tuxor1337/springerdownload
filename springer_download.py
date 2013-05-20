@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, string
+import sys, string, shutil, os
 from gettext import gettext as _
 
 from springerdl import meta, util, download, merge
@@ -56,7 +56,7 @@ def springer_fetch(interface):
     if interface.option('verbose'): util.printToc(accessible_toc)
     
     download.pdf_files(accessible_toc, interface.progress(""), \
-        interface.option('pause'), info['chapter_cnt'])
+        interface.option('pause'))
         
     inputPDF = PdfFileReader(accessible_toc[0]['pdf_file'])
     tmp_box = inputPDF.pages[0].mediaBox
@@ -80,16 +80,39 @@ def springer_fetch(interface):
                 interface.done(_("not available"))
     
     outf = interface.option('output-file')
+    valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
     if outf == None:
         if interface.option('autotitle'):
             outf = "%s - %s.pdf" % (", ".join(info['authors']), \
                                             info['title'])
         else:
             outf = info['online_isbn']+".pdf"
-    valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
-    outf = "".join(c if c in valid_chars else "_" for c in outf)
+        outf = "".join(c if c in valid_chars else "_" for c in outf)
     
-    merge.merge_by_toc(accessible_toc, info, outf, interface)
+    basename = os.path.basename(outf)
+    target_dir = os.path.dirname(outf)
+    if target_dir == "": target_dir = os.getcwd()
+    basename = "".join(c if c in valid_chars else "_" for c in basename)
+    outf = os.path.join(target_dir, basename)
+    
+    if interface.option('download-only'):
+        interface.doing(_("Moving downloaded files to %s") % (target_dir))
+        file_list = []
+        def append_to_list(el, _, flist):
+            if 'pdf_file' in el and el['pdf_file'] != None:
+                flist.append([el['title'], el['pdf_file']])
+        util.tocIterateRec(accessible_toc, append_to_list, file_list)
+        for i,f in enumerate(file_list):
+            if interface.option('autotitle'): 
+                chpt = "".join(c if c in valid_chars else "_" for c in f[0])
+                chpt += ".pdf"
+            else:
+                chpt = basename
+            target_base = "%02d-%s" % (i, chpt)
+            shutil.move(f[1].name, os.path.join(target_dir, target_base))
+        interface.done()
+    else:
+        merge.merge_by_toc(accessible_toc, info, outf, interface)
     
     return True
     
