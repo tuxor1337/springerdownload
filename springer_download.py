@@ -43,7 +43,7 @@ def springer_fetch(interface):
         bookinfo += ": %s" % (info['subtitle'])
     bookinfo += " (%d chapters)" % (info['chapter_cnt'])
     interface.out(bookinfo)
-    if info['noaccess'] and not interface.option('force-full-access'):
+    if info['noaccess'] and interface.option('force-full-access'):
         sys.exit()
     
     interface.doing(_("Fetching chapter data"))

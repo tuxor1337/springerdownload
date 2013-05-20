@@ -85,7 +85,7 @@ class cli_main(object):
                 a = raw_input(_("You don't have access to this book from your"
                     + " current location. Proceed anyway? [y,N] ")).lower()
                 if a == "": a = "n"
-            return a == "y"
+            return a == "n"
         else:
             return self.options[key]
         
