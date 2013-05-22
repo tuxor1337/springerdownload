@@ -2,8 +2,6 @@
 class default_main(object):
     def __init__(self):
         self.options = {
-            "springer_name": "",
-            "cover": True,
             "autotitle": False,
             "pause": 0,
             "blanks": False,
@@ -12,8 +10,13 @@ class default_main(object):
             "skip-meta": False,
             "sorted": False,
             "output-file": None,
+            "cover": True,
+            "springer_name": "",
             "proxy" : None,
             "user-agent" : USER_AGENT,
+            "force-full-access": False,
+            "download-only": False,
+            "use-pdfs": None,
         }
         
     def option(self, key):

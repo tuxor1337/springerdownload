@@ -50,6 +50,8 @@ class cli_main(object):
                             type=str, help=_("Set custom user agent [default: %(default)s]"))
         parser.add_argument("--download-only", action="store_true", default=False, 
                             help=_("Save downloaded PDFs in current directory, don't merge."))
+        parser.add_argument("--use-pdfs", nargs='+', default=None, 
+                            help=_("Don't download any PDFs, use the specified files instead."))
         
         args = parser.parse_args()
         
@@ -71,9 +73,10 @@ class cli_main(object):
             "skip-meta": args.skip_meta,
             "sorted": args.sorted,
             "output-file": args.output, 
-            "proxy" : proxy,
-            "user-agent" : args.user_agent,
-            "download-only" : args.download_only,
+            "proxy": proxy,
+            "user-agent": args.user_agent,
+            "download-only": args.download_only,
+            "use-pdfs": args.use_pdfs,
         }
         self.busy = False
         fetcher(self)

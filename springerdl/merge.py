@@ -1,5 +1,5 @@
 
-import shutil
+import shutil, sys
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from gettext import gettext as _
@@ -50,7 +50,9 @@ def merge_by_toc(toc, info, outf, interface):
         shutil.copy(cat_pdf.name,outf)
         interface.done()
     for f in data['files']:
-        f.close(); os.unlink(f.name)
+        f.close()
+        if interface.option("use-pdfs") == None:
+            os.unlink(f.name)
     interface.out(_("Output written to %s!") % (outf))
     
 

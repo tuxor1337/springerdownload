@@ -95,13 +95,14 @@ def _tocFromDiv(div):
         ch_list.append(ch)
   
     def parsePartItem(chl,li):
-        for subh3,subol in zip(li.findall("h3"), li.findall("ol")):
+        for subh3, subol in zip(li.findall("h3"), li.findall("ol")):
             pdf_url = page_range = ""
             fr_matt = subol.cssselect("li.front-matter-item")
             if len(fr_matt) != 0:
                 page_range = fr_matt[0].cssselect("p.page-range")[0].text_content()
-                if fr_matt[0].find("a"):
-                    pdf_url = fr_matt[0].find("a").attrib["href"]
+                if fr_matt[0].cssselect("a"):
+                    pdf_url = fr_matt[0].cssselect("a")[0].attrib["href"]
+                fr_matt[0].getparent().remove(fr_matt[0])
             append_ch(chl, subh3.text_content().strip(), \
                 getTocRec(subol), pdf_url, [], page_range)
               
@@ -113,10 +114,11 @@ def _tocFromDiv(div):
             link = li.cssselect("span.action a")[0]
             pdf_url = link.attrib["href"] if "Download PDF" in link.text_content() else ""
         except: pdf_url = ""
-        append_ch(chl, title, [], pdf_url, \
+        append_ch(chl, title, [], pdf_url,
             [x.find("a").text_content().strip() \
-                for x in li.cssselect("li[itemprop=author]")], \
-            li.cssselect("p.page-range")[0].text_content(), "no-access" in li.attrib['class'])
+                for x in li.cssselect("li[itemprop=author]")], 
+            li.cssselect("p.page-range")[0].text_content(),
+            "no-access" in li.attrib['class'])
      
     def getTocRec(ol):
         chl = []

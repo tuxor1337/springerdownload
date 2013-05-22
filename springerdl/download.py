@@ -41,7 +41,7 @@ def _fetchChPdf(url, pgs, pause):
         return pdf
     else:
         return None
-            
+
 def _pauseBeforeHttpGet(pause):
     if pause > 0:	
         time.sleep((0.6 + random.random()*0.8)*pause)

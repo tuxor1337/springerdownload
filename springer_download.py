@@ -50,15 +50,28 @@ def springer_fetch(interface):
     toc = meta.fetchToc(root, book_url)
     if interface.option('sorted'):
         toc = sorted(toc, key=lambda el: el['page_range'][0])
-    accessible_toc = util.getAccessibleToc(toc)
     interface.done()
     
-    if interface.option('verbose'): util.printToc(accessible_toc)
-    
-    download.pdf_files(accessible_toc, interface.progress(""), \
-        interface.option('pause'))
+    if interface.option('use-pdfs') != None:
+        data = [0, interface.option('use-pdfs')[:]]
+        def count_pdfs(el, _, d):
+            if el['noaccess'] != None or el['pdf_url'] != "":
+                interface.out("%s = %s" % (d[1][d[0]],el['title']))
+                el['pdf_file'] = open(d[1][d[0]], "rb")
+                d[0] += 1
+        util.tocIterateRec(toc, count_pdfs, data)
+        if interface.option('verbose'): util.printToc(toc)
+        if data[0] != len(data[1]):
+            interface.err(_("Expected %d pdf files, got %s!") % 
+                (pdf_total_count[0], len(interface.option('use-pdfs'))))
+            sys.exit(1)
+    else:
+        toc = util.getAccessibleToc(toc)
+        if interface.option('verbose'): util.printToc(toc)
+        download.pdf_files(toc, interface.progress(""), \
+            interface.option('pause'))
         
-    inputPDF = PdfFileReader(accessible_toc[0]['pdf_file'])
+    inputPDF = PdfFileReader(toc[0]['pdf_file'])
     tmp_box = inputPDF.pages[0].mediaBox
     info['pagesize'] = (tmp_box[2], tmp_box[3])
     if interface.option('cover'):
@@ -69,7 +82,7 @@ def springer_fetch(interface):
             cover = meta.fetchCover(info['print_isbn'], \
                 info['pagesize'])
             if cover:
-                accessible_toc.insert(0,{
+                toc.insert(0,{
                     'pdf_file': cover,
                     'children': [],
                     'page_range': [0,0],
@@ -101,7 +114,7 @@ def springer_fetch(interface):
         def append_to_list(el, _, flist):
             if 'pdf_file' in el and el['pdf_file'] != None:
                 flist.append([el['title'], el['pdf_file']])
-        util.tocIterateRec(accessible_toc, append_to_list, file_list)
+        util.tocIterateRec(toc, append_to_list, file_list)
         for i,f in enumerate(file_list):
             if interface.option('autotitle'): 
                 chpt = "".join(c if c in valid_chars else "_" for c in f[0])
@@ -109,10 +122,11 @@ def springer_fetch(interface):
             else:
                 chpt = basename
             target_base = "%02d-%s" % (i, chpt)
+            f[1].close()
             shutil.move(f[1].name, os.path.join(target_dir, target_base))
         interface.done()
     else:
-        merge.merge_by_toc(accessible_toc, info, outf, interface)
+        merge.merge_by_toc(toc, info, outf, interface)
     
     return True
     
