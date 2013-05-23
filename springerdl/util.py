@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import httplib, re, urllib2, copy, lxml.html
+from gettext import gettext as _
 
 from const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
 
