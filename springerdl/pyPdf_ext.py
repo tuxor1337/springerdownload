@@ -1,4 +1,3 @@
-
 from .util import decodeForSure
 
 import pyPdf
@@ -39,8 +38,8 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
             if _result is None:
                 _result = {}
             for obj in outline:
-                if isinstance(obj, pyPdf.pdf.Destination) and not \
-                    isinstance(obj.page, pyPdf.generic.NullObject):
+                if isinstance(obj, pyPdf.pdf.Destination) and \
+                    hasattr(obj.page, 'idnum'):
                     _result[(id(obj), obj.title)] = (obj.page.idnum,lvl)
                 elif isinstance(obj, list):
                     _setup_outline_page_ids(obj, _result,lvl+1)
