@@ -19,7 +19,7 @@ def merge_by_toc(toc, info, outf, interface):
         "page_size": info['pagesize'],
     }
     util.tocIterateRec(toc, _processCh, data)
-    cat_pdf = NamedTemporaryFile()
+    cat_pdf = NamedTemporaryFile(delete=False)
     if PDFTK_BIN != None:
         pdftk_cat(data['files'], cat_pdf, interface)
     elif GS_BIN != None:
