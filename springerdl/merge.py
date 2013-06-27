@@ -53,6 +53,8 @@ def merge_by_toc(toc, info, outf, interface):
         f.close()
         if interface.option("use-pdfs") == None:
             os.unlink(f.name)
+    cat_pdf.close()
+    os.remove(cat_pdf.name)
     interface.out(_("Output written to %s!") % (outf))
     
 
