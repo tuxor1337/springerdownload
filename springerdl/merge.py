@@ -100,6 +100,11 @@ def gs_cat(pdf_list, outf, interface):
     cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
            "-dAutoRotatePages=/None","-sOutputFile="+outf.name]
     cmd.extend([f.name for f in pdf_list])
+
+    if interface.option('skip-meta') == False:
+        cmd.extend(_write_pdfmark_noop_file)
+        cmd.extend(_write_pdfmark_restore_file)
+
     p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     outp = p.communicate()
     interface.done()
@@ -131,4 +136,46 @@ def gs_meta(pdf, pdfmarks, outf, interface, page_cnt):
     pgs.destroy()
     outp = p.communicate()
     return outp[1].strip()
+
+
+def _write_pdfmark_noop_file(encoding='ascii'):
+    # By default, Ghostscript will preserve pdfmarks from the sources PDFs
+    fd,filename = NamedTemporaryFile(prefix='pdfmark-noop-', text=True)
+    # Make `[... /OUT pdfmark` a no-op.
+    _os.write(fd, """
+% store the original pdfmark
+/originalpdfmark { //pdfmark } bind def
+
+% replace pdfmark with a wrapper that ignores OUT
+/pdfmark
+{
+  {  % begin loop
+
+      { counttomark pop }
+    stopped
+      { /pdfmark errordict /unmatchedmark get exec stop }
+    if
+
+    dup type /nametype ne
+      { /pdfmark errordict /typecheck get exec stop }
+    if
+
+    dup /OUT eq
+      { (Skipping OUT pdfmark\n) print cleartomark exit }
+    if
+
+    originalpdfmark exit
+
+  } loop
+} def
+""".encode(encoding))
+    _os.close(fd)
+    return filename
+
+def _write_pdfmark_restore_file(encoding='ascii'):
+    fd,filename = NamedTemporaryFile(prefix='pdfmark-restore-', text=True)
+    # Restore the default `[... /Out pdfmark` behaviour
+    _os.write(fd, '/pdfmark { originalpdfmark } bind def\n'.encode(encoding))
+    _os.close(fd)
+    return filename
 
