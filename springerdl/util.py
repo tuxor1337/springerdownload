@@ -1,22 +1,32 @@
 # -*- coding: utf-8 -*-
 
-import httplib, re, urllib2, copy, lxml.html
+try:
+    from urllib2 import URLError
+    import urllib2, httplib
+except ImportError:
+    from urllib.error import URLError
+    import urllib.request as urllib2
+    import http.client as httplib
+    
+import re, copy, lxml.html
 from gettext import gettext as _
 
-from const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
+from .const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
 
 ################################## TOC Helpers #################################
 
 def printToc(t,lvl=0):
     for el in t:
-        print "-" * (lvl+1),
-        print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
-        print el['title'],
+        output = "-" * (lvl+1)
+        output += " %3d-%-3d %s" % (
+            el['page_range'][0],
+            el['page_range'][1],
+            el['title']
+        )
         if el['noaccess']:
-            print " (no access)",
-        print
+            output +=  " (no access)\n"
         if len(el['children']) != 0:
-            printToc(el['children'],lvl+1)
+            return output + printToc(el['children'],lvl+1)
       
 def tocIterateRec(toc, func, data=None, lvl=0):
     for el in toc:
@@ -74,8 +84,7 @@ def repairChars(s):
         try:
             s = s.decode("utf8")
         except UnicodeDecodeError:
-            print s
-            print type(s)
+            print(_("Can't decode") + " s='%s',  type(s)=%s" % (s,type(s)))
     for a,b in zip( (u'¨a',u'¨o',u'¨u',u'¨A',u'¨O',u'¨U'), \
                     (u'ä',u'ö',u'ü',u'Ä',u'Ö',u'Ü')):
         s = s.replace(a,b)
@@ -88,7 +97,7 @@ def decodeForSure(s):
         for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
             try: return s.decode(charset)
             except: pass
-        print _("Can't decode") + " s='%s',  type(s)=%s" % (s,type(s))
+        print(_("Can't decode") + " s='%s',  type(s)=%s" % (s,type(s)))
         return s.decode("ascii","replace")
 
 ################################## Soup helpers ################################
@@ -139,12 +148,12 @@ def getElementTree(url,params=None):
     
         html = response.read()
     
-    except urllib2.URLError, e:
-        print _("Connection to %s failed (%s).") % (url, e.reason)
+    except URLError as e:
+        print(_("Connection to %s failed (%s).") % (url, e.reason))
         return None;
         
-    except httplib.BadStatusLine, e:
-        print _("Connection to %s failed.") % (url)
+    except httplib.BadStatusLine as e:
+        print(_("Connection to %s failed.") % (url))
         return None;
     
     return lxml.html.fromstring(html)

@@ -1,8 +1,13 @@
 
 import re, os
 
-from urllib2 import URLError
-from httplib import BadStatusLine
+try:
+    from urllib2 import URLError
+    from httplib import BadStatusLine
+except ImportError:
+    from urllib.error import URLError
+    from http.client import BadStatusLine
+
 from tempfile import NamedTemporaryFile
 from subprocess import Popen, PIPE
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, string, shutil, os
 from gettext import gettext as _
@@ -25,9 +25,9 @@ def springer_fetch(interface):
     springer_key = util.parseSpringerURL(interface.option("springer_name"))
     book_url = '%s/book/10.1007/%s' % (SPRINGER_URL, springer_key)
     if interface.option('verbose'):
-        print "ImageMagick: %s" % IM_BIN
-        print "Ghostscript: %s" % GS_BIN
-        print "PDF Toolkit: %s" % PDFTK_BIN
+        print("ImageMagick: %s" % IM_BIN)
+        print("Ghostscript: %s" % GS_BIN)
+        print("PDF Toolkit: %s" % PDFTK_BIN)
         
     interface.doing(_("Fetching book info"))
     root = util.getElementTree(book_url)
@@ -60,14 +60,14 @@ def springer_fetch(interface):
                 el['pdf_file'] = open(d[1][d[0]], "rb")
                 d[0] += 1
         util.tocIterateRec(toc, count_pdfs, data)
-        if interface.option('verbose'): util.printToc(toc)
+        if interface.option('verbose'): print(util.printToc(toc))
         if data[0] != len(data[1]):
             interface.err(_("Expected %d pdf files, got %s!") % 
                 (pdf_total_count[0], len(interface.option('use-pdfs'))))
             sys.exit(1)
     else:
         toc = util.getAccessibleToc(toc)
-        if interface.option('verbose'): util.printToc(toc)
+        if interface.option('verbose'): print(util.printToc(toc))
         download.pdf_files(toc, interface.progress(""), \
             interface.option('pause'))
         

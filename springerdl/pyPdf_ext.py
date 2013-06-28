@@ -1,7 +1,10 @@
 
 from .util import decodeForSure
 
-import pyPdf
+try:
+    import pyPdf
+except ImportError:
+    import springerdl.PyPDF2 as pyPdf
 
 def _new_createStringObject(string):
     if isinstance(string, unicode):
@@ -31,7 +34,7 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
         try:
             return super(PdfFileReader_ext, self)._buildOutline(node)
         except pyPdf.utils.PdfReadError as e:
-            print "%s" % e
+            print("%s" % e)
             return None
 
     def _getDestinationPageNumbers(self):
@@ -39,8 +42,8 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
             if _result is None:
                 _result = {}
             for obj in outline:
-                if isinstance(obj, pyPdf.pdf.Destination) and not \
-                    isinstance(obj.page, pyPdf.generic.NullObject):
+                if isinstance(obj, pyPdf.pdf.Destination) and \
+                    hasattr(obj.page, 'idnum'):
                     _result[(id(obj), obj.title)] = (obj.page.idnum,lvl)
                 elif isinstance(obj, list):
                     _setup_outline_page_ids(obj, _result,lvl+1)
