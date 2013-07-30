@@ -41,10 +41,39 @@ def springer_fetch(interface):
     bookinfo = info['title']
     if info['subtitle'] != None:
         bookinfo += ": %s" % (info['subtitle'])
-    bookinfo += " (%d chapters)" % (info['chapter_cnt'])
+    bookinfo += " ("
+    bookinfo += _("%d chapters") % (info['chapter_cnt'])
+    if info['full_pdf'] != None:
+        bookinfo += _(", full book PDF available")
+    bookinfo += ")"
     interface.out(bookinfo)
     if info['noaccess'] and interface.option('force-full-access'):
         sys.exit()
+    
+    outf = interface.option('output-file')
+    valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
+    if outf == None:
+        if interface.option('autotitle'):
+            outf = "%s - %s.pdf" % (", ".join(info['authors']), \
+                                            info['title'])
+        else:
+            outf = info['online_isbn']+".pdf"
+        outf = "".join(c if c in valid_chars else "_" for c in outf)
+    
+    basename = os.path.basename(outf)
+    target_dir = os.path.dirname(outf)
+    if target_dir == "": target_dir = os.getcwd()
+    basename = "".join(c if c in valid_chars else "_" for c in basename)
+    outf = os.path.join(target_dir, basename)
+        
+    if info['full_pdf'] != None:
+        pgs = interface.progress(_("Downloading %d/%d kB"))
+        pdf = download.fetch_pdf_with_pgs(info['full_pdf'], pgs)
+        pgs.destroy()
+        interface.doing(_("Moving downloaded file to %s") % (target_dir))
+        shutil.move(pdf.name, outf)
+        interface.done()
+        return 0
     
     interface.doing(_("Fetching chapter data"))
     toc = meta.fetchToc(root, book_url)
@@ -64,7 +93,7 @@ def springer_fetch(interface):
         if data[0] != len(data[1]):
             interface.err(_("Expected %d pdf files, got %s!") % 
                 (pdf_total_count[0], len(interface.option('use-pdfs'))))
-            sys.exit(1)
+            return 1
     else:
         toc = util.getAccessibleToc(toc)
         if interface.option('verbose'): print(util.printToc(toc))
@@ -82,7 +111,7 @@ def springer_fetch(interface):
             cover = meta.fetchCover(info['print_isbn'], \
                 info['pagesize'])
             if cover:
-                toc.insert(0,{
+                toc.insert(0, {
                     'pdf_file': cover,
                     'children': [],
                     'page_range': [0,0],
@@ -91,22 +120,6 @@ def springer_fetch(interface):
                 interface.done()
             else:
                 interface.done(_("not available"))
-    
-    outf = interface.option('output-file')
-    valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
-    if outf == None:
-        if interface.option('autotitle'):
-            outf = "%s - %s.pdf" % (", ".join(info['authors']), \
-                                            info['title'])
-        else:
-            outf = info['online_isbn']+".pdf"
-        outf = "".join(c if c in valid_chars else "_" for c in outf)
-    
-    basename = os.path.basename(outf)
-    target_dir = os.path.dirname(outf)
-    if target_dir == "": target_dir = os.getcwd()
-    basename = "".join(c if c in valid_chars else "_" for c in basename)
-    outf = os.path.join(target_dir, basename)
     
     if interface.option('download-only'):
         interface.doing(_("Moving downloaded files to %s") % (target_dir))
@@ -128,7 +141,7 @@ def springer_fetch(interface):
     else:
         merge.merge_by_toc(toc, info, outf, interface)
     
-    return True
+    return 0
     
 if __name__ == "__main__":
     sys.exit(main())

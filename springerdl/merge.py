@@ -1,5 +1,5 @@
 
-import shutil, sys
+import shutil, sys, os
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
 from gettext import gettext as _
@@ -20,15 +20,13 @@ def merge_by_toc(toc, info, outf, interface):
     }
     util.tocIterateRec(toc, _processCh, data)
     cat_pdf = NamedTemporaryFile(delete=False)
-    if PDFTK_BIN != None:
+    if PDFTK_BIN != None and False:
         pdftk_cat(data['files'], cat_pdf, interface)
     elif GS_BIN != None:
         o = gs_cat(data['files'], cat_pdf, interface)
         if interface.option('verbose'):
-            interface.out(_("Ghostscript stdout:"))
-            interface.out(o[0])
             interface.out(_("Ghostscript stderr:"))
-            interface.out(o[1])
+            interface.out(o)
     else:
         interface.err(_("Need either ghostscript or pdftk for concatenation."))
         sys.exit(1)
@@ -99,11 +97,20 @@ def gs_cat(pdf_list, outf, interface):
     interface.doing(_("Concatenating"))
     cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
            "-dAutoRotatePages=/None","-sOutputFile="+outf.name]
+    if interface.option('skip-meta') == False:
+        mark_noop = pdfmark.getNoopFile()
+        cmd.append(mark_noop.name)
     cmd.extend([f.name for f in pdf_list])
+    if interface.option('skip-meta') == False:
+        mark_restore = pdfmark.getRestoreFile()
+        cmd.append(mark_restore.name)
     p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     outp = p.communicate()
+    if interface.option('skip-meta') == False:
+        os.unlink(mark_noop.name)
+        os.unlink(mark_restore.name)
     interface.done()
-    return [outp[0].strip(),outp[1].strip()]
+    return outp[1].strip()
         
 def pdftk_cat(pdf_list, outf, interface):
     interface.doing(_("Concatenating"))

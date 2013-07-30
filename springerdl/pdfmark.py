@@ -1,5 +1,6 @@
 
 from time import localtime, strftime
+from tempfile import NamedTemporaryFile
 
 from .util import decodeForSure
    
@@ -68,4 +69,38 @@ def labelsToPdfmark(pls):
     mark += "]>> /PUT pdfmark\n"
     mark += "[{Catalog} <</PageLabels {pl}>> /PUT pdfmark"
     return mark
+    
+
+def getNoopFile():
+    f = NamedTemporaryFile(prefix='pdfmark-noop-', delete=False)
+    f.write("""
+        /originalpdfmark { //pdfmark } bind def
+        /pdfmark
+        {
+            {
+                { counttomark pop }
+                stopped
+                { /pdfmark errordict /unmatchedmark get exec stop }
+                if
+
+                dup type /nametype ne
+                { /pdfmark errordict /typecheck get exec stop }
+                if
+
+                dup /OUT eq
+                { (Skipping OUT pdfmark\n) print cleartomark exit }
+                if
+
+                originalpdfmark exit
+            } loop
+        } def
+    """)
+    f.close()
+    return f
+
+def getRestoreFile():
+    f = NamedTemporaryFile(prefix='pdfmark-restore-', delete=False)
+    f.write('/pdfmark { originalpdfmark } bind def\n')
+    f.close()
+    return f
 

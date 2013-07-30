@@ -14,17 +14,7 @@ def pdf_files(toc, pgs, pause):
     util.tocIterateRec(toc, lambda x,y,z: _fetchCh(x,z), data)
     pgs.destroy()
 
-def _fetchCh(ch, opts):
-    pgs, pause = opts[0], opts[1]
-    if pgs != None:
-        pgs.set_text(_("Chapter %d/%d, downloading %%d/%%d kB") \
-            % (opts[2],opts[3]))
-    pdf = _fetchChPdf(ch['pdf_url'], pgs, pause)
-    if pdf != None:
-        ch['pdf_file'] = pdf
-        opts[2] += 1
-
-def _fetchChPdf(url, pgs, pause):
+def fetch_pdf_with_pgs(url, pgs, pause=0):
     if url != "":
         pdf = NamedTemporaryFile(delete=False)
         _pauseBeforeHttpGet(pause)
@@ -41,6 +31,16 @@ def _fetchChPdf(url, pgs, pause):
         return pdf
     else:
         return None
+
+def _fetchCh(ch, opts):
+    pgs, pause = opts[0], opts[1]
+    if pgs != None:
+        pgs.set_text(_("Chapter %d/%d, downloading %%d/%%d kB") \
+            % (opts[2],opts[3]))
+    pdf = fetch_pdf_with_pgs(ch['pdf_url'], pgs, pause)
+    if pdf != None:
+        ch['pdf_file'] = pdf
+        opts[2] += 1
 
 def _pauseBeforeHttpGet(pause):
     if pause > 0:	

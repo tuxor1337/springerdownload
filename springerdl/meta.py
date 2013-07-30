@@ -22,6 +22,11 @@ def fetchBookInfo(root):
         author_list = root.cssselect("div.summary li[itemprop=editor]")
     chapter_cnt = root.cssselect("span.chapter-count")[0].text_content()
     m = re.search(r'\(([0-9\.]+) chapters\)', chapter_cnt.strip())
+    full_pdf = root.cssselect("#action-bar-download-pdf-link")
+    if len(full_pdf) > 0:
+        full_pdf = full_pdf[0].get("href")
+    else: 
+        full_pdf = None
     def get_id(x):
         el = root.cssselect("#%s" % x)
         return el[0].text_content() if len(el) != 0 else None
@@ -35,6 +40,7 @@ def fetchBookInfo(root):
         'publisher' : get_id("abstract-about-publisher"),
         'year' : get_id("abstract-about-book-chapter-copyright-year"),
         'noaccess' : bool(noaccess),
+        'full_pdf' : full_pdf,
     }
                 
     return info
