@@ -17,6 +17,7 @@ class default_main(object):
             "force-full-access": False,
             "download-only": False,
             "use-pdfs": None,
+            "ignore-full": False,
         }
         
     def option(self, key):

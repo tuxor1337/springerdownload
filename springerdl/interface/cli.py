@@ -28,6 +28,8 @@ class cli_main(object):
                                 + "each chapter begins at an odd page number."))
         parser.add_argument('--skip-meta', action="store_true", default=False,
                         help=_("Skip ghostscripting meta information."))
+        parser.add_argument('--ignore-full', action="store_true", default=False,
+                        help=_("Don't download full pdf, even if available."))
         parser.add_argument('--sorted', action="store_true", default=False,
                         help=_("Try sorting the chapters instead of "\
                             + "concatenating in the order found on the website."))
@@ -77,6 +79,7 @@ class cli_main(object):
             "user-agent": args.user_agent,
             "download-only": args.download_only,
             "use-pdfs": args.use_pdfs,
+            "ignore-full": args.ignore_full,
         }
         self.busy = False
         fetcher(self)

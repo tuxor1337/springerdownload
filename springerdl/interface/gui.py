@@ -76,6 +76,7 @@ class gui_main(Gtk.Window):
             "force-full-access": False,
             "download-only": False,
             "use-pdfs": None,
+            "ignore-full": False,
         }
         self.pgs.set_fraction(0)
         self.processing = True

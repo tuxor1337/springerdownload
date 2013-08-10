@@ -66,7 +66,7 @@ def springer_fetch(interface):
     basename = "".join(c if c in valid_chars else "_" for c in basename)
     outf = os.path.join(target_dir, basename)
         
-    if info['full_pdf'] != None:
+    if info['full_pdf'] != None and not interface.option('ignore-full'):
         pgs = interface.progress(_("Downloading %d/%d kB"))
         pdf = download.fetch_pdf_with_pgs(info['full_pdf'], pgs)
         pgs.destroy()
