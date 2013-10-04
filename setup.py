@@ -59,7 +59,7 @@ setup(name='Springer Link Downloader',
       author='Thomas Vogt',
       author_email='tuxor1337@web.de',
       url='https://github.com/tuxor1337/springerdownload',
-      packages=["springerdl", "springerdl.interface", "springerdl.PyPDF2],
+      packages=["springerdl", "springerdl.interface", "springerdl.PyPDF2"],
       scripts=["springer_download.py"],
       data_files=data_files
      )
