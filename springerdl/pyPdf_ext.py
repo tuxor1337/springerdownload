@@ -3,7 +3,7 @@ from .util import decodeForSure
 try:
     import pyPdf
 except ImportError:
-    import springerdl.PyPDF2 as pyPdf
+    from . import PyPDF2 as pyPdf
 
 def _new_createStringObject(string):
     if isinstance(string, unicode):
