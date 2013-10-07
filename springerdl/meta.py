@@ -21,7 +21,7 @@ def fetchBookInfo(root):
     if len(author_list) == 0:
         author_list = root.cssselect("div.summary li[itemprop=editor]")
     chapter_cnt = root.cssselect("span.chapter-count")[0].text_content()
-    m = re.search(r'\(([0-9\.]+) chapters\)', chapter_cnt.strip())
+    m = re.search(r'\(([0-9\.]+) (chapters|entries)\)', chapter_cnt.strip())
     full_pdf = root.cssselect("#action-bar-download-pdf-link")
     if len(full_pdf) > 0:
         full_pdf = full_pdf[0].get("href")
