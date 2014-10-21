@@ -6,7 +6,7 @@ from distutils.command.build_scripts \
         import build_scripts as distutils_build_scripts
 from distutils.command.bdist_dumb import bdist_dumb
 
-VERSION = "1.1"
+VERSION = "1.2"
 
 class build_scripts(distutils_build_scripts):
     def run(self):
