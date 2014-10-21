@@ -20,7 +20,7 @@ def merge_by_toc(toc, info, outf, interface):
     }
     util.tocIterateRec(toc, _processCh, data)
     cat_pdf = NamedTemporaryFile(delete=False)
-    if PDFTK_BIN != None and False:
+    if PDFTK_BIN != None	:
         pdftk_cat(data['files'], cat_pdf, interface)
     elif GS_BIN != None:
         o = gs_cat(data['files'], cat_pdf, interface)
@@ -30,7 +30,7 @@ def merge_by_toc(toc, info, outf, interface):
     else:
         interface.err(_("Need either ghostscript or pdftk for concatenation."))
         sys.exit(1)
-        
+
     cat_pdf.flush(); cat_pdf.seek(0)
     if GS_BIN != None and interface.option('skip-meta') == False:
         pdfmarks = pdfmark.infoToPdfmark(info)
