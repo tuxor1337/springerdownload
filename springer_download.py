@@ -89,14 +89,16 @@ def springer_fetch(interface):
                 el['pdf_file'] = open(d[1][d[0]], "rb")
                 d[0] += 1
         util.tocIterateRec(toc, count_pdfs, data)
-        if interface.option('verbose'): print(util.printToc(toc))
+        if interface.option('verbose'):
+            print(util.printToc(toc))
         if data[0] != len(data[1]):
             interface.err(_("Expected %d pdf files, got %s!") % 
                 (pdf_total_count[0], len(interface.option('use-pdfs'))))
             return 1
     else:
         toc = util.getAccessibleToc(toc)
-        if interface.option('verbose'): print(util.printToc(toc))
+        if interface.option('verbose'):
+            print(util.printToc(toc))
         download.pdf_files(toc, interface.progress(""), \
             interface.option('pause'))
         

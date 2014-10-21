@@ -16,8 +16,9 @@ from .const import USER_AGENT, SPRINGER_URL, SPR_IMG_URL
 ################################## TOC Helpers #################################
 
 def printToc(t,lvl=0):
+    output = ""
     for el in t:
-        output = "-" * (lvl+1)
+        output += "-" * (lvl+1)
         output += " %3d-%-3d %s" % (
             el['page_range'][0],
             el['page_range'][1],
@@ -26,7 +27,10 @@ def printToc(t,lvl=0):
         if el['noaccess']:
             output +=  " (no access)\n"
         if len(el['children']) != 0:
-            return output + printToc(el['children'],lvl+1)
+            output += printToc(el['children'],lvl+1)
+        output += "\n"
+    return output.strip("\n")
+            
       
 def tocIterateRec(toc, func, data=None, lvl=0):
     for el in toc:
