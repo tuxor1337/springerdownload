@@ -102,9 +102,15 @@ def springer_fetch(interface):
         download.pdf_files(toc, interface.progress(""), \
             interface.option('pause'))
         
-    inputPDF = PdfFileReader(toc[0]['pdf_file'])
-    tmp_box = inputPDF.pages[0].mediaBox
-    info['pagesize'] = (tmp_box[2], tmp_box[3])
+    first_pdf_file = []
+    def get_first_pdf_file_from_toc(el, lvl, data):
+        if len(data) == 0 and "pdf_file" in el: data.append(el['pdf_file'])
+    util.tocIterateRec(toc, get_first_pdf_file_from_toc, first_pdf_file)
+    if len(first_pdf_file) > 0:
+        inputPDF = PdfFileReader(first_pdf_file[0])
+        tmp_box = inputPDF.pages[0].mediaBox
+        info['pagesize'] = (tmp_box[2], tmp_box[3])
+    else: info['pagesize'] = (0, 0)
     if interface.option('cover'):
         if IM_BIN == None:
             interface.err(_("Skipping cover due to missing ImageMagick binary."))
