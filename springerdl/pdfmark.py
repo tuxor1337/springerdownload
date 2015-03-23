@@ -63,7 +63,7 @@ def labelsToPdfmark(pls):
     mark = "[/_objdef {pl} /type /dict /OBJ pdfmark\n[{pl} <</Nums ["
     tmp = []
     for label in pls:
-        tmp2 = ["%s %s" % (i,j) for (i,j) in label[1].items()]
+        tmp2 = ["%s (%s)" % (i,j) if i == "/P" else "%s %s" % (i,j) for (i,j) in label[1].items()]
         tmp.append("%d <<%s>>" % (label[0]," ".join(tmp2)))
     mark += " ".join(tmp)
     mark += "]>> /PUT pdfmark\n"

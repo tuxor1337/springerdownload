@@ -1,6 +1,6 @@
 
-from springerdl.pdftoc import getTocFromPdf
-import argparse, pyPdf
+from springerdl.pyPdf_ext import PdfFileReader_ext as PdfFileReader
+import argparse
 
 parser = argparse.ArgumentParser(description = 'Extract table of contents '\
                                              + 'from pdf document')
@@ -12,8 +12,8 @@ parser.add_argument('--gui', action="store_true", default=False,
                   help='Output TOC in a GUI. Overwrites --pdfmark.')
 args = parser.parse_args()
 
-pdf = pyPdf.PdfFileReader(open(args.pdffile,"r"))
-toc = getTocFromPdf(pdf)
+pdf = PdfFileReader(open(args.pdffile,"r"))
+toc = pdf.getToc()
 
 # There are two possible TOC formats.
 # A) This is how pdfmark handles the table of contents:
@@ -79,7 +79,7 @@ if args.gui:
 elif args.pdfmark:
     from springerdl.pdfmark import tocToPdfmark, labelsToPdfmark
     print tocToPdfmark(toc)
-    print labelsToPdfmark(getPagelabelsFromPdf(pdf))
+    print labelsToPdfmark(pdf.getPagelabels())
 else:
     print toc
     print converted_toc
