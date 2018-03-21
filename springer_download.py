@@ -116,7 +116,7 @@ def springer_fetch(interface):
             interface.err(_("Skipping cover due to missing ImageMagick binary."))
         else:
             interface.doing(_("Fetching book cover"))
-            cover = meta.fetchCover(info['print_isbn'], \
+            cover = meta.fetchCover(info['online_isbn'], \
                 info['pagesize'])
             if cover:
                 toc.insert(0, {
