@@ -1,9 +1,26 @@
 
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from time import localtime, strftime
 from tempfile import NamedTemporaryFile
 
 from .util import decodeForSure
-   
+
 ################################################################################
 ############################# meta to pdfmark  #################################
 ################################################################################
@@ -18,7 +35,7 @@ def infoToPdfmark(i):
     marks = "["
     for x,v in zip(['title','subtitle','authors','year'],\
                     ['/Title','/Subject','/Author','/CreationDate']):
-        if i[x]: 
+        if i[x]:
             s = ", ".join(i[x]) if x == 'authors' else i[x]
             if x == 'year': s = "(D:%s)" % (s)
             else: s = "<FEFF"+_uniconvHex(s)+">"
@@ -34,7 +51,7 @@ def tocToPdfmark(toc,filt=lambda x:x):
         i = 0; tB = []
         while i < lt:
             ch = { 'title': tA[i][0] }
-            if i+1 < len(tA): 
+            if i+1 < len(tA):
                 if tA[i+1][1] == tA[i][1]:
                     ch['page_range'] = (tA[i][1],tA[i][1])
                 else:
@@ -45,7 +62,7 @@ def tocToPdfmark(toc,filt=lambda x:x):
             ch['children'] = convertTocAtoB(tA[i+1:],j-i-1)
             i = j; tB.append(ch)
         return tB
-        
+
     tocB = convertTocAtoB(toc,len(toc))
     def getmark(t):
         m = ""
@@ -57,7 +74,7 @@ def tocToPdfmark(toc,filt=lambda x:x):
             if len(c['children']) > 0: m += getmark(c['children'])
         return m
     return getmark(tocB)
-   
+
 def labelsToPdfmark(pls):
     if len(pls) == 0: return ""
     mark = "[/_objdef {pl} /type /dict /OBJ pdfmark\n[{pl} <</Nums ["
@@ -69,7 +86,7 @@ def labelsToPdfmark(pls):
     mark += "]>> /PUT pdfmark\n"
     mark += "[{Catalog} <</PageLabels {pl}>> /PUT pdfmark"
     return mark
-    
+
 
 def getNoopFile():
     f = NamedTemporaryFile(prefix='pdfmark-noop-', delete=False)

@@ -1,4 +1,21 @@
 
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from math import floor
 from argparse import ArgumentParser
 from sys import stdout
@@ -11,8 +28,8 @@ class cli_main(object):
         parser.add_argument('springername', metavar='SPRINGER_IDENTIFIER',
                         type=str, help = _('A string identifying the book, '
                                        + 'e.g. its URL or Online-ISBN.'))
-        parser.add_argument('-o','--output', metavar='FILE', type=str, 
-                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))  
+        parser.add_argument('-o','--output', metavar='FILE', type=str,
+                        help=_('Place to store, default: "ONLINE_ISBN.pdf".'))
         parser.add_argument('--no-cover', action="store_true", default=False,
                         help=_("Don't add front cover as first page."))
         parser.add_argument('--autotitle', action="store_true", default=False,
@@ -40,30 +57,30 @@ class cli_main(object):
                                 + "sheet."))
         parser.add_argument('-v', '--verbose', action="store_true", default=False,
                         help=_("Verbose stdout."))
-        parser.add_argument("--proxy-url", nargs='?', const=None, default=None, 
+        parser.add_argument("--proxy-url", nargs='?', const=None, default=None,
                             type=str, help=_("Set proxy address [default: %(default)s]"))
-        parser.add_argument("--proxy-username", nargs='?', const=None, default=None, 
+        parser.add_argument("--proxy-username", nargs='?', const=None, default=None,
                             type=str, help=_("Set username to authenticate with at proxy [default: %(default)s]"))
-        parser.add_argument("--proxy-password", nargs='?', const=None, default=None, 
+        parser.add_argument("--proxy-password", nargs='?', const=None, default=None,
                             type=str, help=_("Set password to authenticate with at proxy [default: %(default)s]"))
-        parser.add_argument("--proxy-port", nargs='?', const=80, default=80, 
+        parser.add_argument("--proxy-port", nargs='?', const=80, default=80,
                             type=int, help=_("Set proxy port [default: %(default)s]"))
-        parser.add_argument("--user-agent", nargs='?', const=None, default=None, 
+        parser.add_argument("--user-agent", nargs='?', const=None, default=None,
                             type=str, help=_("Set custom user agent [default: %(default)s]"))
-        parser.add_argument("--download-only", action="store_true", default=False, 
+        parser.add_argument("--download-only", action="store_true", default=False,
                             help=_("Save downloaded PDFs in current directory, don't merge."))
-        parser.add_argument("--use-pdfs", nargs='+', default=None, 
+        parser.add_argument("--use-pdfs", nargs='+', default=None,
                             help=_("Don't download any PDFs, use the specified files instead."))
-        
+
         args = parser.parse_args()
-        
+
         proxy = {
             "url" : args.proxy_url,
             "username" : args.proxy_username,
             "password" : args.proxy_password,
             "port" : args.proxy_port
         }
-        
+
         self.options =  {
             "springer_name": args.springername,
             "cover": not args.no_cover,
@@ -74,7 +91,7 @@ class cli_main(object):
             "verbose": args.verbose,
             "skip-meta": args.skip_meta,
             "sorted": args.sorted,
-            "output-file": args.output, 
+            "output-file": args.output,
             "proxy": proxy,
             "user-agent": args.user_agent,
             "download-only": args.download_only,
@@ -83,7 +100,7 @@ class cli_main(object):
         }
         self.busy = False
         fetcher(self)
-        
+
     def option(self, key):
         if key == "force-full-access":
             a = ""
@@ -94,7 +111,7 @@ class cli_main(object):
             return a == "n"
         else:
             return self.options[key]
-        
+
     def doing(self,s):
         self.relax(); stdout.write("==> %s..." % (s));
         stdout.flush(); self.busy = True
@@ -110,7 +127,7 @@ class cli_main(object):
     def relax(self):
         if self.busy: stdout.write("\n")
         self.busy = False
-    
+
     def set_text(self,txt): self.pgs_txt = "==> "+txt+"..."
     def update(self,a,b,c="\r"):
         self.pgs_b = b; a = b if a > b else a
@@ -123,4 +140,4 @@ class cli_main(object):
         if self.pgs_b != 0:
             self.update(self.pgs_b,self.pgs_b," Done!")
         self.relax()
-        
+

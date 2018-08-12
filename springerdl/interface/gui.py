@@ -1,4 +1,21 @@
 
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import sys
 from gi.repository import Gtk,Gdk
 from gettext import gettext as _
@@ -48,17 +65,17 @@ class gui_main(Gtk.Window):
         self.connect("destroy", self.destroy_cb)
         self.show_all()
         Gtk.main()
-        
+
     def destroy_cb(self,*args):
         Gtk.main_quit()
         if self.processing: sys.exit(1)
-      
+
     def button_key_cb(self,widget,event,data=None):
         if event.type == Gdk.EventType.KEY_PRESS \
                 and event.keyval == Gdk.keyval_from_name("Return"):
             self.button_cb(widget,data)
             return True
-      
+
     def button_cb(self,button,data=None):
         self.options = {
             "autotitle": False,
@@ -88,7 +105,7 @@ class gui_main(Gtk.Window):
         [x.set_sensitive(True) for x in [self.spr_id,self.butt_outf,\
                               self.butt_fetch, self.cover]]
         return True
-      
+
     def button_outf_cb(self,button,data=None):
         chosen = Gtk.FileChooserDialog(_("Choose output file..."),self,
             Gtk.FileChooserAction.SAVE,
@@ -101,9 +118,9 @@ class gui_main(Gtk.Window):
         if success == Gtk.ResponseType.OK:
             self.outf = filename
             self.butt_outf.set_label(_("Output file: ")+_makeshort(self.outf))
-        
+
     def option(self,key): return self.options[key]
-         
+
     def write(self,s): self.pgs.set_text(s)
     def flush(self):
         while Gtk.events_pending(): Gtk.main_iteration()
@@ -126,4 +143,4 @@ class gui_main(Gtk.Window):
         self.write((self.pgs_text % (a,b))+c)
         self.pgs.set_fraction(float(a)/float(b))
         self.flush()
-      
+

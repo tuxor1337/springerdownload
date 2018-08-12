@@ -36,7 +36,7 @@ Installation
 Simply install running:
 
     # python setup.py install
-    
+
 If you want to install as a user to your `$HOME` directory use the `--user`
 option. Please note that you will have to remove the data manually if you want
 to uninstall. Here are the files and folders created by the setup script:
@@ -47,13 +47,13 @@ to uninstall. Here are the files and folders created by the setup script:
     %{platform-prefix}/share/doc/springerdl/examples/
     %{python-site-packages}/springerdl/
     %{python-site-packages}/Springer_Link_Downloader-1.0-py2.7.egg-info
-    
+
 `%{python-site-packages}` and `%{platform-prefix}` depend on the operating system.
 In Fedora these values default to `/usr/lib/python2.7/site-packages` and `/usr`
 respectively.
-    
+
 Package maintainers might want to add the `--root` option to specify an
-appropriate `%{buildroot}`. For more information see 
+appropriate `%{buildroot}`. For more information see
 
     $ python setup.py install --help
 
@@ -63,16 +63,3 @@ Usage
 For detailed usage information please refer to
 
     $ springer_download.py --help
-
-License
--------
-
-This program is free software; you can redistribute it and/or modify it under
-the terms of VERSION 2 of the GNU General Public License as published by the
-Free Software Foundation provided that the above copyright notice is included.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
-
-Go to http://www.gnu.org/licenses/gpl-2.0.html to get a copy of the license.

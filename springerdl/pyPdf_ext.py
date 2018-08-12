@@ -1,3 +1,21 @@
+
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 from .util import decodeForSure
 
 try:
@@ -75,7 +93,7 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
             if page_id_to_page_numbers.get(page_idnum) != None:
                 result.append([title,page_id_to_page_numbers.get(page_idnum),lvl])
         return result
-        
+
     def getToc(self,shift=0,default=None,baselvl=0,child_cnt=0):
         ch = self._getDestinationPageNumbers()
         if ch == None: return []
@@ -90,7 +108,7 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
         if len(ch) == 0 and default != None:
             ch.append([default,1+shift,baselvl,child_cnt])
         return ch
-        
+
     def getPagelabels(self,shift=0,start=None):
         if start == None:
             start = shift
@@ -107,4 +125,4 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
             else:
                 pls.append([shift,{"/S":"/D","/St":str(start)}])
         return pls
-  
+

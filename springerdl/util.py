@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+#
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 try:
     from urllib2 import URLError
@@ -7,7 +24,7 @@ except ImportError:
     from urllib.error import URLError
     import urllib.request as urllib2
     import http.client as httplib
-    
+
 import re, copy, lxml.html
 from gettext import gettext as _
 
@@ -30,14 +47,14 @@ def printToc(t,lvl=0):
             output += printToc(el['children'],lvl+1)
         output += "\n"
     return output.strip("\n")
-            
-      
+
+
 def tocIterateRec(toc, func, data=None, lvl=0):
     for el in toc:
         func(el,lvl,data)
         if len(el['children']) != 0:
             tocIterateRec(el['children'],func,data,lvl+1)
-            
+
 def getAccessibleToc(toc):
     new_t = []
     for ch in toc:
@@ -47,9 +64,9 @@ def getAccessibleToc(toc):
             if ch['pdf_url'] != "" or len(new_ch['children']) != 0:
                 new_t.append(new_ch)
     return new_t
-    
+
 ################################## Little Helpers ##############################
-        
+
 def parseSpringerURL(url):
     url = url.replace("http://","")
     url = url.replace("link.springer.com/","")
@@ -93,7 +110,7 @@ def repairChars(s):
                     (u'ä',u'ö',u'ü',u'Ä',u'Ö',u'Ü')):
         s = s.replace(a,b)
     return s
-   
+
 def decodeForSure(s):
     if type(s) == unicode: return s
     try: return unicode(s)
@@ -111,29 +128,29 @@ def setupOpener(proxy,useragent):
         url = proxy["url"]
         port = proxy["port"]
         if url:
-            
+
             proxy_handler = None
             if not port:
                 proxy_handler = urllib2.ProxyHandler({'http': url})
             else:
                 proxy_handler = urllib2.ProxyHandler({'http': "%s:%d" % (url, port)})
-            
+
             username = proxy["username"]
             password = proxy["password"]
             if username and password:
                 password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-                
+
                 password_mgr.add_password(None, SPRINGER_URL, username, password)
                 password_mgr.add_password(None, SPR_IMG_URL, username, password)
-                
+
                 auth_handlers = [urllib2.ProxyBasicAuthHandler(password_mgr), urllib2.ProxyDigestAuthHandler(password_mgr)]
-                
+
                 opener = urllib2.build_opener(proxy_handler, *auth_handlers)
             else:
                 opener = urllib2.build_opener(proxy_handler)
-            
+
             urllib2.install_opener(opener)
-    
+
     if useragent:
         global USER_AGENT
         USER_AGENT = useragent
@@ -141,24 +158,24 @@ def setupOpener(proxy,useragent):
 def connect(url,params=None):
     request = urllib2.Request(url, params);
     request.add_header('User-Agent', USER_AGENT);
-     
+
     return urllib2.urlopen(request)
-    
+
 def getElementTree(url,params=None):
     try:
         response = connect(url, params)
         if not response:
             return None
-    
+
         html = response.read()
-    
+
     except URLError as e:
         print(_("Connection to %s failed (%s).") % (url, e.reason))
         return None;
-        
+
     except httplib.BadStatusLine as e:
         print(_("Connection to %s failed.") % (url))
         return None;
-    
+
     return lxml.html.fromstring(html)
-   
+

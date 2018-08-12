@@ -1,4 +1,21 @@
 
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import re, os
 
 try:
@@ -25,7 +42,7 @@ def fetchBookInfo(root):
     full_pdf = root.cssselect("a.test-bookpdf-link")
     if len(full_pdf) > 0:
         full_pdf = full_pdf[0].get("href")
-    else: 
+    else:
         full_pdf = None
     def get_content(x):
         el = root.cssselect(x)
@@ -45,7 +62,7 @@ def fetchBookInfo(root):
     if info['year'] is not None:
         m = re.search(r'.*([0-9]+)$', info['year'])
         info['year'] = m.group(1)
-                
+
     return info
 
 def fetchToc(root, book_url):
@@ -82,7 +99,7 @@ def _tocFromDiv(div):
     def append_ch(ch_list,title="", children=[], pdf_url="", \
               authors=[], page_range="", noaccess=None):
         title = title.replace("\n"," ")
-        m = re.search(r'Pages ([0-9A-Z]+)-([0-9A-Z]+)', 
+        m = re.search(r'Pages ([0-9A-Z]+)-([0-9A-Z]+)',
            page_range,re.I)
         try:
             page_range = [m.group(1),m.group(2)]
@@ -107,7 +124,7 @@ def _tocFromDiv(div):
             'page_range' : page_range,
         }
         ch_list.append(ch)
-  
+
     def parsePartItem(chl,li):
         for subh3, subol in zip(li.findall("h3"), li.findall(".//ol")):
             pdf_url = page_range = ""
@@ -119,10 +136,10 @@ def _tocFromDiv(div):
                 fr_matt[0].getparent().remove(fr_matt[0])
             append_ch(chl, subh3.text_content().strip(), \
                 getTocRec(subol), pdf_url, [], page_range)
-              
+
     def parseChItem(chl,li):
         title = li.cssselect(".content-type-list__title")[0].text_content().strip()
-        try: 
+        try:
             link = li.cssselect("div.content-type-list__action a")[0]
             pdf_url = link.attrib["href"] if "PDF" in link.text_content() else ""
         except: pdf_url = ""
@@ -134,14 +151,14 @@ def _tocFromDiv(div):
         append_ch(chl, title, [], pdf_url, author_list,
             li.cssselect("span[data-test=page-range]")[0].text_content(),
             len(pdf_url) == 0)
-     
+
     def getTocRec(ol):
         chl = []
         for li in ol.findall("li"):
             if "part-item" in li.attrib['class']: parsePartItem(chl,li)
             else: parseChItem(chl,li)
         return chl
-    
+
     return getTocRec(div.find("ol"))
 
 def fetchCover(isbn,size):
@@ -161,4 +178,4 @@ def fetchCover(isbn,size):
         return tmp_pdfimg
     except (URLError, BadStatusLine):
         return None
-        
+

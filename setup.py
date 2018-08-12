@@ -20,7 +20,7 @@ class build_scripts(distutils_build_scripts):
                 newpath = newpath[:-3]
             if newer(script, newpath) or self.force:
                 self.copy_file(script, newpath)
-                
+
 class single_file(bdist_dumb):
     description = "create single executable"
 
@@ -32,7 +32,7 @@ class single_file(bdist_dumb):
         self.format="zip"
         print "==>",os.path.realpath(self.dist_dir)
         return cmd
-    
+
     def run(self):
         bdist_dumb.run(self)
         for t,_,f in self.distribution.dist_files:
@@ -44,7 +44,7 @@ class single_file(bdist_dumb):
                 exefile.write(zipfile.read())
                 zipfile.close(); exefile.close()
                 os.chmod(exef,0777)
-                
+
 data_files = [("share/applications",["setup_data/springer_download.desktop"]),
     ("share/doc/springerdl/examples",["examples/toc_from_pdf.py",
                    "examples/toc_gui_gtk.py"]),
@@ -57,8 +57,8 @@ setup(name='Springer Link Downloader',
       cmdclass={"build_scripts": build_scripts, "single_file": single_file},
       description='Download whole books from link.springer.com',
       author='Thomas Vogt',
-      author_email='tuxor1337@web.de',
-      url='https://github.com/tuxor1337/springerdownload',
+      author_email='thomas.vogt@tovotu.de',
+      url='https://framagit.org/tuxor1337/springerdownload',
       packages=["springerdl", "springerdl.interface", "springerdl.PyPDF2"],
       scripts=["springer_download.py"],
       data_files=data_files

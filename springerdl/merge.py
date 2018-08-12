@@ -1,4 +1,21 @@
 
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import shutil, sys, os
 from subprocess import Popen, PIPE
 from tempfile import NamedTemporaryFile
@@ -7,7 +24,7 @@ from gettext import gettext as _
 from . import util, pdfmark
 from .const import *
 from .pyPdf_ext import PdfFileReader_ext as PdfFileReader
-        
+
 def merge_by_toc(toc, info, outf, interface):
     data = {
         "pdf_cnt": 0,
@@ -54,7 +71,7 @@ def merge_by_toc(toc, info, outf, interface):
     cat_pdf.close()
     os.remove(cat_pdf.name)
     interface.out(_("Output written to %s!") % (outf))
-    
+
 
 def _processCh(el, lvl, data):
     if data['interface'].option('skip-meta') == False:
@@ -92,7 +109,7 @@ def _insertBlankPage(data):
     Popen(cmd, stdout=PIPE, stderr=PIPE).communicate()
     data['files'].append(tmp_blankpdf)
     data['total_pages'] += 1
-   
+
 def gs_cat(pdf_list, outf, interface):
     interface.doing(_("Concatenating"))
     cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
@@ -111,7 +128,7 @@ def gs_cat(pdf_list, outf, interface):
         os.unlink(mark_restore.name)
     interface.done()
     return outp[1].strip()
-        
+
 def pdftk_cat(pdf_list, outf, interface):
     interface.doing(_("Concatenating"))
     cmd = [PDFTK_BIN]

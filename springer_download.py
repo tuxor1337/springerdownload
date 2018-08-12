@@ -1,4 +1,21 @@
 #!/usr/bin/env python
+#
+# This file is part of Springer Link Downloader
+#
+# Copyright 2018 Thomas Vogt
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 import sys, string, shutil, os
 from gettext import gettext as _
@@ -15,20 +32,20 @@ def main(argv=sys.argv):
     else:
         from springerdl.interface.gui import gui_main
         interface = gui_main
-        
+
     interface(springer_fetch)
     return 0
-    
+
 def springer_fetch(interface):
     util.setupOpener(interface.option("proxy"), interface.option("user-agent"))
-    
+
     springer_key = util.parseSpringerURL(interface.option("springer_name"))
     book_url = '%s/book/10.1007/%s' % (SPRINGER_URL, springer_key)
     if interface.option('verbose'):
         print("ImageMagick: %s" % IM_BIN)
         print("Ghostscript: %s" % GS_BIN)
         print("PDF Toolkit: %s" % PDFTK_BIN)
-        
+
     interface.doing(_("Fetching book info"))
     root = util.getElementTree(book_url)
     if root == None:
@@ -36,7 +53,7 @@ def springer_fetch(interface):
         return False
     info = meta.fetchBookInfo(root)
     interface.done()
-    
+
     interface.out(", ".join(info['authors']))
     bookinfo = info['title']
     if info['subtitle'] != None:
@@ -49,7 +66,7 @@ def springer_fetch(interface):
     interface.out(bookinfo)
     if info['noaccess'] and interface.option('force-full-access'):
         sys.exit()
-    
+
     outf = interface.option('output-file')
     valid_chars = "-_.,() %s%s" % (string.ascii_letters, string.digits)
     if outf == None:
@@ -59,13 +76,13 @@ def springer_fetch(interface):
         else:
             outf = info['online_isbn']+".pdf"
         outf = "".join(c if c in valid_chars else "_" for c in outf)
-    
+
     basename = os.path.basename(outf)
     target_dir = os.path.dirname(outf)
     if target_dir == "": target_dir = os.getcwd()
     basename = "".join(c if c in valid_chars else "_" for c in basename)
     outf = os.path.join(target_dir, basename)
-        
+
     if info['full_pdf'] != None and not interface.option('ignore-full'):
         pgs = interface.progress(_("Downloading %d/%d kB"))
         pdf = download.fetch_pdf_with_pgs(info['full_pdf'], pgs)
@@ -74,13 +91,13 @@ def springer_fetch(interface):
         shutil.move(pdf.name, outf)
         interface.done()
         return 0
-    
+
     interface.doing(_("Fetching chapter data"))
     toc = meta.fetchToc(root, book_url)
     if interface.option('sorted'):
         toc = sorted(toc, key=lambda el: el['page_range'][0])
     interface.done()
-    
+
     if interface.option('use-pdfs') != None:
         data = [0, interface.option('use-pdfs')[:]]
         def count_pdfs(el, _, d):
@@ -92,7 +109,7 @@ def springer_fetch(interface):
         if interface.option('verbose'):
             print(util.printToc(toc))
         if data[0] != len(data[1]):
-            interface.err(_("Expected %d pdf files, got %s!") % 
+            interface.err(_("Expected %d pdf files, got %s!") %
                 (pdf_total_count[0], len(interface.option('use-pdfs'))))
             return 1
     else:
@@ -101,7 +118,7 @@ def springer_fetch(interface):
             print(util.printToc(toc))
         download.pdf_files(toc, interface.progress(""), \
             interface.option('pause'))
-        
+
     first_pdf_file = []
     def get_first_pdf_file_from_toc(el, lvl, data):
         if len(data) == 0 and "pdf_file" in el: data.append(el['pdf_file'])
@@ -128,7 +145,7 @@ def springer_fetch(interface):
                 interface.done()
             else:
                 interface.done(_("not available"))
-    
+
     if interface.option('download-only'):
         interface.doing(_("Moving downloaded files to %s") % (target_dir))
         file_list = []
@@ -137,7 +154,7 @@ def springer_fetch(interface):
                 flist.append([el['title'], el['pdf_file']])
         util.tocIterateRec(toc, append_to_list, file_list)
         for i,f in enumerate(file_list):
-            if interface.option('autotitle'): 
+            if interface.option('autotitle'):
                 chpt = "".join(c if c in valid_chars else "_" for c in f[0])
                 chpt += ".pdf"
             else:
@@ -148,10 +165,10 @@ def springer_fetch(interface):
         interface.done()
     else:
         merge.merge_by_toc(toc, info, outf, interface)
-    
+
     return 0
-    
+
 if __name__ == "__main__":
     sys.exit(main())
-      
-   
+
+
