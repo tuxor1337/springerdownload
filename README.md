@@ -32,10 +32,10 @@ to uninstall. Here are the files and folders created by the setup script:
     %{platform-prefix}/share/applications/springer_download.desktop
     %{platform-prefix}/share/pixmaps/springer_download.png
     %{platform-prefix}/share/doc/springerdl/examples/
-    %{python-site-packages}/springerdl/
-    %{python-site-packages}/Springer_Link_Downloader-%{version}-py3.7.egg-info
+    %{python3-site-packages}/springerdl/
+    %{python3-site-packages}/springerdownload-%{version}-py3.7.egg-info
 
-`%{python-site-packages}` and `%{platform-prefix}` depend on the operating system.
+`%{python3-site-packages}` and `%{platform-prefix}` depend on the operating system.
 In Fedora these values default to `/usr/lib/python3.7/site-packages` and `/usr`
 respectively.
 
