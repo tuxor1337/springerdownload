@@ -105,7 +105,7 @@ class cli_main(object):
         if key == "force-full-access":
             a = ""
             while a not in ["y","n"]:
-                a = raw_input(_("You don't have access to this book from your"
+                a = input(_("You don't have access to this book from your"
                     + " current location. Proceed anyway? [y,N] ")).lower()
                 if a == "": a = "n"
             return a == "n"

@@ -65,9 +65,9 @@ def convertTocAtoB(tA,lt):
 
 def printToc(toc,lvl=0):
     for el in toc:
-        print "-" * (lvl+1),
-        print "%3d-%-3d" % (el['page_range'][0],el['page_range'][1]),
-        print el['title']
+        print("-" * (lvl+1), end='')
+        print("%3d-%-3d" % (el['page_range'][0],el['page_range'][1]), end='')
+        print(el['title'])
         if len(el['children']) != 0:
             printToc(el['children'],lvl+1)
    
@@ -78,10 +78,10 @@ if args.gui:
     toc_gui(converted_toc)
 elif args.pdfmark:
     from springerdl.pdfmark import tocToPdfmark, labelsToPdfmark
-    print tocToPdfmark(toc)
-    print labelsToPdfmark(pdf.getPagelabels())
+    print(tocToPdfmark(toc))
+    print(labelsToPdfmark(pdf.getPagelabels()))
 else:
-    print toc
-    print converted_toc
+    print(toc)
+    print(converted_toc)
     printToc(converted_toc)
    

@@ -1,8 +1,8 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 # This file is part of Springer Link Downloader
 #
-# Copyright 2018 Thomas Vogt
+# Copyright 2019 Thomas Vogt
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by

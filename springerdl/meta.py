@@ -50,8 +50,8 @@ def fetchBookInfo(root):
     info = {
         'authors' : [x.text_content() for x in author_list],
         'chapter_cnt' : int(m.group(1)),
-        'title' : get_content("#book-title h1"),
-        'subtitle' : get_content("#book-title h2"),
+        'title' : get_content(".page-title h1"),
+        'subtitle' : get_content(".page-title h2"),
         'print_isbn' : get_content("#print-isbn"),
         'online_isbn' : get_content("#electronic-isbn"),
         'publisher' : get_content("#publisher-name"),

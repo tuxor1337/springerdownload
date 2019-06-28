@@ -139,7 +139,7 @@ def pdftk_cat(pdf_list, outf, interface):
 
 def gs_meta(pdf, pdfmarks, outf, interface, page_cnt):
     pdfmark_file = NamedTemporaryFile(delete=False)
-    pdfmark_file.write(pdfmarks)
+    pdfmark_file.write(pdfmarks.encode("ascii"))
     pdfmark_file.flush(); pdfmark_file.seek(0)
     cmd = [GS_BIN,"-dBATCH","-dNOPAUSE","-sDEVICE=pdfwrite",\
            "-dAutoRotatePages=/None","-sOutputFile="+outf,\
@@ -147,9 +147,9 @@ def gs_meta(pdf, pdfmarks, outf, interface, page_cnt):
     p = Popen(cmd, stdout=PIPE, stderr=PIPE)
     pgs = interface.progress(_("Writing to file (page %d of %d)"))
     pgs.update(0,page_cnt)
-    for line in iter(p.stdout.readline,""):
-        if "Page" in line:
-            pgs.update(int(line.replace("Page ","").strip()),page_cnt)
+    for line in iter(p.stdout.readline,b""):
+        if b"Page" in line:
+            pgs.update(int(line.replace(b"Page ",b"").strip()),page_cnt)
     pdfmark_file.close()
     os.remove(pdfmark_file.name)
     pgs.destroy()

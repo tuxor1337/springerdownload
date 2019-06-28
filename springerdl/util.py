@@ -92,7 +92,7 @@ def int_to_roman(i):
     return ''.join(result)
 
 def roman_to_int(n):
-    n = unicode(n).upper()
+    n = str(n).upper()
     i = result = 0
     for integer, numeral in numeral_map:
         while n[i:i + len(numeral)] == numeral:
@@ -101,7 +101,7 @@ def roman_to_int(n):
     return result
 
 def repairChars(s):
-    if type(s) != unicode:
+    if type(s) != str:
         try:
             s = s.decode("utf8")
         except UnicodeDecodeError:
@@ -112,8 +112,8 @@ def repairChars(s):
     return s
 
 def decodeForSure(s):
-    if type(s) == unicode: return s
-    try: return unicode(s)
+    if type(s) == str: return s
+    try: return str(s)
     except:
         for charset in ["utf8","latin1","ISO-8859-2","cp1252","utf_16be"]:
             try: return s.decode(charset)

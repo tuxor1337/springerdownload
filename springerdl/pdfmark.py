@@ -90,7 +90,7 @@ def labelsToPdfmark(pls):
 
 def getNoopFile():
     f = NamedTemporaryFile(prefix='pdfmark-noop-', delete=False)
-    f.write("""
+    f.write(b"""
         /originalpdfmark { //pdfmark } bind def
         /pdfmark
         {
@@ -117,7 +117,7 @@ def getNoopFile():
 
 def getRestoreFile():
     f = NamedTemporaryFile(prefix='pdfmark-restore-', delete=False)
-    f.write('/pdfmark { originalpdfmark } bind def\n')
+    f.write(b'/pdfmark { originalpdfmark } bind def\n')
     f.close()
     return f
 

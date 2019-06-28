@@ -18,39 +18,36 @@
 
 from .util import decodeForSure
 
-try:
-    import pyPdf
-except ImportError:
-    from . import PyPDF2 as pyPdf
+import PyPDF2
 
 def _new_createStringObject(string):
-    if isinstance(string, unicode):
-        return pyPdf.generic.TextStringObject(string)
-    elif isinstance(string, str):
-        if string.startswith(pyPdf.generic.codecs.BOM_UTF16_BE):
+    if isinstance(string, str):
+        return PyPDF2.generic.TextStringObject(string)
+    elif isinstance(string, bytes):
+        if string.startswith(PyPDF2.generic.codecs.BOM_UTF16_BE):
             try:
-                retval = pyPdf.generic.TextStringObject(string.decode("utf-16"))
+                retval = PyPDF2.generic.TextStringObject(string.decode("utf-16"))
                 retval.autodetect_utf16 = True
                 return retval
             except UnicodeDecodeError:
                 pass
         try:
-            retval = pyPdf.generic.TextStringObject(
-                pyPdf.generic.decode_pdfdocencoding(string)
+            retval = PyPDF2.generic.TextStringObject(
+                PyPDF2.generic.decode_pdfdocencoding(string)
             )
             retval.autodetect_pdfdocencoding = True
             return retval
         except UnicodeDecodeError:
-            return pyPdf.generic.ByteStringObject(string)
+            return PyPDF2.generic.ByteStringObject(string)
     else:
-        raise TypeError("createStringObject should have str or unicode arg")
-pyPdf.generic.createStringObject = _new_createStringObject
+        raise TypeError("createStringObject should have str or bytes arg")
+PyPDF2.generic.createStringObject = _new_createStringObject
 
-class PdfFileReader_ext(pyPdf.PdfFileReader):
+class PdfFileReader_ext(PyPDF2.PdfFileReader):
     def _buildOutline(self, node):
         try:
             return super(PdfFileReader_ext, self)._buildOutline(node)
-        except pyPdf.utils.PdfReadError as e:
+        except PyPDF2.utils.PdfReadError as e:
             print("%s" % e)
             return None
 
@@ -59,7 +56,7 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
             if _result is None:
                 _result = {}
             for obj in outline:
-                if isinstance(obj, pyPdf.pdf.Destination) and \
+                if isinstance(obj, PyPDF2.pdf.Destination) and \
                     hasattr(obj.page, 'idnum'):
                     _result[(id(obj), obj.title)] = (obj.page.idnum,lvl)
                 elif isinstance(obj, list):
@@ -89,7 +86,7 @@ class PdfFileReader_ext(pyPdf.PdfFileReader):
         page_id_to_page_numbers = _setup_page_id_to_num()
 
         result = []
-        for (_, title), (page_idnum,lvl) in outline_page_ids.iteritems():
+        for (_, title), (page_idnum,lvl) in outline_page_ids.items():
             if page_id_to_page_numbers.get(page_idnum) != None:
                 result.append([title,page_id_to_page_numbers.get(page_idnum),lvl])
         return result

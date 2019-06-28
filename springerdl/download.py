@@ -36,7 +36,7 @@ def fetch_pdf_with_pgs(url, pgs, pause=0):
         pdf = NamedTemporaryFile(delete=False)
         _pauseBeforeHttpGet(pause)
         webPDF  = util.connect(SPRINGER_URL + url)
-        file_size = int(webPDF.info().getheader('Content-Length').strip())
+        file_size = int(webPDF.getheader('Content-Length').strip())
         downloaded_size = 0
         while 1:
             data = webPDF.read(DOWNLOAD_CHUNK_SIZE)
